@@ -21,7 +21,8 @@ separable and exact equations, the AI self-improvement growth models, phase line
 and Euler’s method.
 Chapter 2 includes initial conditions, characteristic equations, independence,
 Wronskian geometry, nonhomogeneous solutions, complex roots and real solutions,
-free and forced mechanical vibrations, resonance, and undetermined coefficients.
+free and forced mechanical vibrations, resonance, undetermined coefficients,
+boundary value problems, and eigenfunctions.
 Future examples are explicitly labeled as planned and have no inactive or broken
 experiment links. Chapter groupings follow the
 Autumn 2026 syllabus, rather than the textbook's chapter numbering.
@@ -427,6 +428,46 @@ advances with reduced motion. Browser-local state is validated before use.
 homogeneous solver in **src/vibration-model.cjs**. Tests independently check
 the six lecture solutions, ODE residuals, initial data, decomposition,
 near-resonance stability, envelope bounds, frequency peaks, and restored state.
+
+## Section 3.8: endpoints, eigenvalues, and eigenfunctions
+
+[Meet both boundaries](https://shzhang3.github.io/amath351-lab/chapters/higher-order/boundary-values/)
+follows the short Section 3.8 lecture through three views:
+
+1. **Hit the endpoint:** adjust C in `y = C sin(2x)`, with initial slope
+   `y′(0) = 2C`. The three right targets give one, infinitely many, or no
+   solutions. Optional family curves and a solution-count reveal support
+   prediction before explanation. The target-match button is available only
+   when exactly one C works.
+2. **Find eigenvalues:** vary λ, choose L = π, 2, or 2π, and switch between
+   `y(0) = y(L) = 0` and `y′(0) = 0, y(L) = 0`. The candidate is nonzero
+   for every parameter, including zero and negative λ. A right-endpoint
+   residual plot locates the allowed values. The mode buttons and residual
+   dots select exact analytic roots; a short scan stops at the next one.
+3. **Why eigenfunctions?** overlay input y, output −y″, and λy. An ODE
+   candidate satisfies the identity for every x but becomes an eigenfunction
+   of this BVP only when it also meets the right boundary. A polynomial
+   satisfies both boundaries while failing the differential equation.
+   Equality at a single inspection point is not treated as an identity.
+
+Eigenvalue candidates are rescaled to `max |y| = A`, with A > 0. This is
+a single constant for the whole curve, so it preserves the ODE and all
+homogeneous boundary conditions. The residual chart uses A = 1 regardless
+of the display amplitude. Its zeros are unchanged. No zero candidate can
+be mistaken for an eigenfunction. The operator comparison uses actual
+derivatives, without separate rescaling of its output curves.
+
+Use `?view=endpoints`, `?view=eigenvalues`, or `?view=operator` for a
+particular view. Browser-local state is validated on reload. All motion
+starts paused and stops on edits or page hiding. Reduced motion uses
+discrete tracing and exact mode jumps. The plot axes stay fixed while
+tracing; the eigenvalue scan uses fixed axes as λ changes.
+
+The sources are **src/boundary-values.html** and
+**src/boundary-value-model.cjs**. Tests check all three endpoint counts,
+positive/zero/negative parameters, differential-equation residuals,
+both spectra, interval scaling, the polynomial counterexample, and
+validated saved values. The Lab publishes no lecture source or answers PDF.
 
 ## Section 3.2: the lecture's dependent polynomials
 

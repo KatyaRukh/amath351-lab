@@ -37,7 +37,7 @@
       {"slug": "vibrations", "title": "Set an oscillator in motion", "description": "Watch a moving mass trace its displacement curve. Change mass, stiffness, and damping, then compare four kinds of free motion.", "section": "Sections 3.4 / 3.6 · Free vibrations", "label": "m x″ + c x′ + k x = 0", "source": "vibrations.html"},
       {"slug": "undetermined-coefficients", "title": "What does multiplying by x change?", "description": "Compare a trial with its output in the ODE. Multiply by x, check overlap, and match the forcing for a simple or repeated root.", "section": "Section 3.5 · Undetermined coefficients", "label": "Ae⁴ˣ · Axe⁴ˣ · Ax²e⁴ˣ", "source": "undetermined-coefficients.html"},
       {"slug": "resonance", "title": "Drive the oscillator", "description": "Explore the lecture’s bounded response, beats, resonance, and damped motion. Separate transient and steady-state curves, then find the response peak.", "section": "Section 3.6 · Forced vibrations and resonance", "label": "m x″ + c x′ + k x = F₀ cos(ωt)", "source": "resonance.html"},
-      {"slug": "boundary-values", "title": "Meet both boundaries", "description": "Vary an eigenvalue parameter until a solution satisfies both endpoint conditions.", "section": "Section 3.8"}
+      {"slug": "boundary-values", "title": "Meet both boundaries", "description": "Aim a solution at an endpoint, discover eigenvalues, and compare y with −y″ and λy. Change the interval and switch a boundary value to a slope.", "section": "Section 3.8 · Endpoint problems and eigenvalues", "label": "−y″ = λy · meet both endpoints", "source": "boundary-values.html"}
     ]
   },
   {

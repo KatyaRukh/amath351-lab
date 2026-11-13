@@ -1,0 +1,281 @@
+<section class="lab-intro">
+  <div class="site-kicker">Section 3.8 · Endpoint problems and eigenvalues</div>
+  <h1>Meet both boundaries.</h1>
+  <p>Change a starting slope and try to hit an endpoint. Then vary λ to discover the allowed shapes, and see why they are called eigenfunctions.</p>
+</section>
+<div id="boundary-lab" class="lab-interactive">
+  <div class="bv-tabs" role="group" aria-label="Choose an exploration">
+    <button type="button" class="lab-button" data-view="endpoints" aria-pressed="true">1 · Hit the endpoint</button>
+    <button type="button" class="lab-button" data-view="eigenvalues" aria-pressed="false">2 · Find eigenvalues</button>
+    <button type="button" class="lab-button" data-view="operator" aria-pressed="false">3 · Why eigenfunctions?</button>
+  </div>
+  <h2 id="bv-title">Can you hit the endpoint?</h2>
+  <p id="bv-equation" class="lab-math">y″ + 4y = 0, y(0) = 0</p>
+  <div id="bv-endpoint-controls">
+    <div class="lab-row bv-cases" role="group" aria-label="Choose a right endpoint condition">
+      <button type="button" class="lab-button" data-case="unique" aria-pressed="true">A · y(π/4) = 1</button>
+      <button type="button" class="lab-button" data-case="infinite" aria-pressed="false">B · y(π/2) = 0</button>
+      <button type="button" class="lab-button" data-case="none" aria-pressed="false">C · y(π/2) = 1</button>
+    </div>
+    <label class="lab-label bv-wide" for="bv-C"><span class="lab-row">Choose C in y = C sin(2x) <output id="bv-C-out" for="bv-C">C = 0.6</output></span><input class="lab-slider" id="bv-C" type="range" min="-2" max="2" step="0.01" value="0.6"></label>
+    <p id="bv-slope" class="lab-small">Initial slope y′(0) = 2C = 1.2</p>
+    <div class="lab-row bv-actions">
+      <button type="button" class="lab-button" id="bv-match">Match the target</button>
+      <label for="bv-family"><input type="checkbox" id="bv-family" checked> Show a family of curves</label>
+      <label for="bv-reveal"><input type="checkbox" id="bv-reveal"> Reveal the solution count</label>
+    </div>
+    <p id="bv-count" class="bv-count" hidden></p>
+  </div>
+  <div id="bv-eigen-controls" hidden>
+    <div class="bv-selects">
+      <label for="bv-bc">Boundary conditions <select id="bv-bc"><option value="values">y(0) = 0, y(L) = 0</option><option value="mixed">y′(0) = 0, y(L) = 0</option></select></label>
+      <label for="bv-length">Interval length L <select id="bv-length"><option value="pi">π</option><option value="two">2</option><option value="two-pi">2π</option></select></label>
+    </div>
+    <div class="bv-parameters lab-controls">
+      <label class="lab-label" for="bv-lambda"><span class="lab-row">Parameter λ <output id="bv-lambda-out" for="bv-lambda">2.000000</output></span><input class="lab-slider" id="bv-lambda" type="range" min="-4" max="30" step="any" value="2"></label>
+      <label class="lab-label" for="bv-A"><span class="lab-row">Nonzero amplitude max |y| <output id="bv-A-out" for="bv-A">1.00</output></span><input class="lab-slider" id="bv-A" type="range" min="0.25" max="2" step="0.05" value="1"></label>
+    </div>
+    <div class="lab-row bv-signs" role="group" aria-label="Test negative, zero, and positive parameters"><span class="lab-small">Try the three signs:</span><button type="button" class="lab-button" data-lambda="-1" aria-pressed="false">λ = −1</button><button type="button" class="lab-button" data-lambda="0" aria-pressed="false">λ = 0</button><button type="button" class="lab-button" data-lambda="2" aria-pressed="true">λ = 2</button></div>
+    <div id="bv-modes" class="lab-row bv-modes" role="group" aria-label="Select one of the first three eigenvalues">
+      <button type="button" class="lab-button" data-mode="1" aria-pressed="false">n = 1</button>
+      <button type="button" class="lab-button" data-mode="2" aria-pressed="false">n = 2</button>
+      <button type="button" class="lab-button" data-mode="3" aria-pressed="false">n = 3</button>
+    </div>
+    <div id="bv-operator-controls" class="lab-row bv-actions" role="group" aria-label="Choose the test function" hidden>
+      <button type="button" class="lab-button" data-test="candidate" aria-pressed="true">Current ODE candidate</button>
+      <button type="button" class="lab-button" data-test="polynomial" aria-pressed="false">Polynomial meeting the boundaries</button>
+    </div>
+    <p id="bv-function" class="lab-math" hidden></p>
+    <p class="lab-small" id="bv-normalization">Each nonzero candidate is scaled to max |y| = A. Scaling preserves the ODE and homogeneous boundary conditions.</p>
+  </div>
+  <p id="bv-observation" class="bv-observation">The left endpoint stays fixed. Change the initial slope to move the right endpoint toward the orange target.</p>
+  <div id="bv-checks" class="lab-row lab-small bv-checks" hidden></div>
+  <div id="bv-plot"></div>
+  <div id="bv-legend" class="lab-row lab-small bv-legend" aria-label="Curve legend"></div>
+  <p id="bv-endpoint" class="lab-numbers"></p>
+  <p id="bv-live" class="lab-small lab-numbers"></p>
+  <div class="lab-row bv-playback">
+    <button type="button" class="lab-button lab-primary" id="bv-trace">Trace the curve</button>
+    <button type="button" class="lab-button" id="bv-scan" hidden>Scan to the next eigenvalue</button>
+    <button type="button" class="lab-button" id="bv-reset">Reset experiment</button>
+  </div>
+  <label class="lab-label bv-wide" for="bv-progress"><span class="lab-row">Inspect position x <output id="bv-progress-out" for="bv-progress"></output></span><input class="lab-slider" id="bv-progress" type="range" min="0" max="1" step="0.001" value="1"></label>
+  <p class="lab-small" id="bv-plot-note">The target refers to the purple curve y. Select the graph or use the position slider to inspect a point. The axes stay fixed during tracing.</p>
+  <p id="bv-status" class="bv-sr-only" role="status" aria-live="polite"></p>
+</div>
+<section id="bv-spectrum" class="lab-interactive bv-spectrum" aria-labelledby="bv-spectrum-heading" hidden>
+  <div class="site-kicker">The right endpoint selects λ</div>
+  <h2 id="bv-spectrum-heading">Where does the endpoint error vanish?</h2>
+  <p>For unit-amplitude candidates, plot R(λ) = y<sub>λ</sub>(L). Its zeros are the eigenvalues. The dots mark exact allowed values in the displayed range.</p>
+  <div id="bv-residual"></div>
+  <p id="bv-spectrum-value" class="lab-numbers"></p>
+  <p id="bv-spectrum-formula" class="lab-math"></p>
+  <p class="lab-small">Select a dot for an exact eigenvalue, or select elsewhere to vary λ. Changing L keeps the current λ fixed. Compare the n = 1, 2, 3 buttons before and after changing L.</p>
+</section>
+<section class="lab-explanation">
+  <details>
+    <summary>Initial conditions and endpoint conditions</summary>
+    <p>For y″ + 4y = 0, the condition y(0) = 0 gives y = C sin(2x). An initial slope fixes C because y′(0) = 2C. A right endpoint instead asks whether C sin(2b) can equal the target value.</p>
+    <p>If sin(2b) ≠ 0, one C works. If sin(2b) = 0, every C works for a zero target, while no C works for a nonzero target. All curves in the first exploration solve the ODE exactly.</p>
+  </details>
+  <details>
+    <summary>Why are some λ values called eigenvalues?</summary>
+    <p>The equation y″ + λy = 0 says −y″ = λy. The operation “take two derivatives and change the sign” sends an eigenfunction to a multiple of itself. The multiplier is its eigenvalue.</p>
+    <p>The ODE and the boundary conditions belong together. A candidate may satisfy the ODE but miss the right endpoint. A polynomial may meet both endpoints but fail the ODE. An eigenfunction must satisfy both requirements and be nonzero.</p>
+    <p>The zero function satisfies these homogeneous equations for every λ. It does not count as an eigenfunction. The amplitude control therefore stays positive. Any nonzero multiple of an eigenfunction has the same eigenvalue.</p>
+  </details>
+  <details>
+    <summary>Read the three cases and the two boundary conditions</summary>
+    <p>For two zero endpoint values, the candidates are multiples of sin(√λ x) when λ &gt; 0, of x when λ = 0, and of e<sup>μx</sup> − e<sup>−μx</sup> when λ = −μ² &lt; 0. The last two can return to zero at L &gt; 0 only when the whole solution is zero.</p>
+    <p>For y(0) = y(L) = 0, the allowed values are λ<sub>n</sub> = (nπ/L)², with eigenfunctions sin(nπx/L), n = 1, 2, ….</p>
+    <p>For y′(0) = 0 and y(L) = 0, the positive candidates are cosines. The allowed values are λ<sub>n</sub> = [(2n − 1)π/(2L)]², with eigenfunctions cos[(2n − 1)πx/(2L)], n = 1, 2, …. Zero and negative λ again give no nonzero solution for these particular boundary conditions.</p>
+    <p>Doubling L divides every eigenvalue of a fixed mode by four. No matrix or determinant is needed: apply the two endpoint conditions to the general solution.</p>
+  </details>
+  <details>
+    <summary>A short classroom sequence</summary>
+    <ol>
+      <li>Try target A, then B and C. Change C before revealing the solution count.</li>
+      <li>In the eigenvalue view, compare λ = 1, 2, and 4 on [0, π]. Scan to the next allowed value.</li>
+      <li>Double the interval length. Then change the left condition from a value to a slope. Compare the allowed values.</li>
+      <li>In the last view, choose an allowed mode and compare y, −y″, and λy. Try the polynomial too. Matching at one point does not establish an identity on the whole interval.</li>
+    </ol>
+    <p>Curves and derivatives are analytic. Sampled paths are used for drawing. Positive rescaling makes the displayed maximum |y| equal to A and leaves the boundary test unchanged.</p>
+  </details>
+</section>
+<style>
+  #boundary-lab h2,.bv-spectrum h2{font-size:26px;margin:24px 0 10px;}
+  #boundary-lab .bv-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+  #boundary-lab [aria-pressed="true"]{border-color:var(--site-purple);color:var(--site-purple);background:var(--site-soft);}
+  #boundary-lab #bv-equation{margin-bottom:20px;}
+  #boundary-lab .bv-cases,#boundary-lab .bv-actions,#boundary-lab .bv-modes{gap:10px;margin:16px 0;}
+  #boundary-lab .bv-wide{max-width:none;}
+  #boundary-lab .bv-actions label{display:inline-flex;align-items:center;gap:7px;font-size:14px;min-height:44px;}
+  #boundary-lab input[type="checkbox"]{accent-color:var(--site-purple);width:18px;height:18px;}
+  #boundary-lab .bv-selects{display:flex;flex-wrap:wrap;gap:16px 30px;margin-bottom:18px;}
+  #boundary-lab .bv-selects label{display:flex;flex-direction:column;gap:7px;font-size:14px;}
+  #boundary-lab select{font:inherit;padding:11px 14px;color:var(--site-ink);border:1px solid var(--site-line);border-radius:9px;background:var(--site-paper);max-width:100%;}
+  #boundary-lab .bv-parameters{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:30px;}
+  #boundary-lab .bv-modes .lab-button{font-size:14px;}
+  #boundary-lab .bv-signs{gap:8px;margin-top:12px;}#boundary-lab .bv-signs .lab-button{font-size:14px;padding:8px 14px;}
+  #boundary-lab .bv-observation{border-left:3px solid var(--site-purple);padding-left:14px;margin:22px 0 14px;}
+  #boundary-lab .bv-count{color:var(--site-teal);font-weight:600;}
+  #boundary-lab .bv-checks{gap:8px 20px;margin:12px 0;}
+  #boundary-lab .bv-checks span{padding-bottom:3px;border-bottom:2px solid var(--site-line);}
+  #boundary-lab .bv-checks .bv-pass{border-color:var(--site-teal);}
+  #boundary-lab .bv-checks .bv-fail{border-color:var(--site-orange);}
+  #boundary-lab svg,.bv-spectrum svg{display:block;width:100%;}
+  #boundary-lab svg text,.bv-spectrum svg text{fill:var(--site-ink);font-size:12px;}
+  .bv-grid line{stroke:var(--site-line);}.bv-grid .domain,.bv-axis .domain{display:none;}
+  .bv-frame{stroke:var(--site-line);fill:none;}.bv-line{fill:none;stroke-width:2.4;}
+  .bv-guide{stroke:var(--site-muted);stroke-dasharray:4 4;}.bv-zero{stroke:var(--site-muted);opacity:.55;}
+  .bv-legend{gap:7px 20px;margin:10px 0;}.bv-legend span{display:inline-flex;align-items:center;gap:7px;}
+  .bv-legend i{display:inline-block;width:25px;border-top:2px solid;}
+  #boundary-lab .bv-playback{gap:10px;margin:22px 0;}
+  .bv-spectrum{margin-top:34px;}.bv-spectrum h2{margin-top:8px;}
+  #boundary-lab [hidden],.bv-spectrum[hidden]{display:none!important;}
+  .bv-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  @media(max-width:680px){#boundary-lab .bv-tabs{grid-template-columns:minmax(0,1fr);}#boundary-lab .bv-parameters{grid-template-columns:minmax(0,1fr);gap:15px;}#boundary-lab h2,.bv-spectrum h2{font-size:23px;}#boundary-lab .bv-selects{display:grid;grid-template-columns:minmax(0,1fr);}}
+</style>
+<script src="{{D3_URL}}"></script>
+<script>{{BOUNDARY_VALUE_MODEL}}</script>
+<script>
+(()=>{
+  const M=BoundaryValueModel,root=document.getElementById('boundary-lab'),el=id=>document.getElementById('bv-'+id),store='amath351-boundary-values-v1';
+  let state=M.fresh(),playing='',raf=0,last=0,scan=null,chart,widthKey='',spectrumKey='';
+  let raw;try{raw=JSON.parse(localStorage.getItem(store));state=M.restore(raw);}catch(_){}
+  const requested=new URLSearchParams(location.search).get('view');if(['endpoints','eigenvalues','operator'].includes(requested)){state.view=requested;if(requested==='operator'&&raw?.version!==1)state.lambda=4;}
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),purple='var(--site-purple)',teal='var(--site-teal)',orange='var(--site-orange)',muted='var(--site-muted)';
+  const fmt=(n,d=3)=>Math.abs(n)<1e-11?'0':Math.abs(n)<.001?d3.format('.3~g')(n).replace('-','−'):Number(n.toFixed(d)).toString().replace('-','−');
+  const lengthName=()=>({pi:'π',two:'2','two-pi':'2π'})[state.length];
+  const save=()=>{try{localStorage.setItem(store,JSON.stringify({version:1,...state}));}catch(_){}};
+  const announce=()=>{el('status').textContent=el('observation').textContent+' '+el('endpoint').textContent;};
+  function legend(items){el('legend').replaceChildren();for(const item of items){const span=document.createElement('span'),i=document.createElement('i');i.style.borderColor=item.color;if(item.dash)i.style.borderTopStyle='dashed';i.setAttribute('aria-hidden','true');span.append(i,document.createTextNode(item.label));el('legend').append(span);}}
+  function makePlot(node,id,label){
+    const svg=d3.select(node).append('svg').attr('role','img').attr('aria-label',label);svg.append('title');
+    svg.append('defs').append('clipPath').attr('id',id).append('rect');svg.append('rect').attr('class','bv-frame');svg.append('g').attr('class','bv-grid');
+    const paths=svg.append('g').attr('clip-path','url(#'+id+')');paths.append('line').attr('class','bv-zero');paths.append('g').attr('class','bv-lines');
+    svg.append('g').attr('class','bv-axis bv-x-axis');svg.append('g').attr('class','bv-axis bv-y-axis');
+    svg.append('text').attr('data-axis','x').attr('text-anchor','end');svg.append('text').attr('data-axis','y');
+    return {svg,paths};
+  }
+  function axes(plot,node,xDomain,yDomain,h,xLabel,yLabel){
+    const w=node.clientWidth,b={left:59,right:w-22,top:30,bottom:h-47};
+    const x=d3.scaleLinear().domain(xDomain).range([b.left,b.right]),y=d3.scaleLinear().domain(yDomain).range([b.bottom,b.top]);
+    plot.svg.attr('viewBox','0 0 '+w+' '+h).attr('height',h);
+    plot.svg.selectAll('.bv-frame,clipPath rect').attr('x',b.left).attr('y',b.top).attr('width',b.right-b.left).attr('height',b.bottom-b.top);
+    plot.svg.select('.bv-grid').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(-(b.right-b.left)).tickFormat(''));
+    plot.svg.select('.bv-x-axis').attr('transform','translate(0,'+b.bottom+')').call(d3.axisBottom(x).ticks(w<450?4:7).tickSize(0).tickPadding(8));
+    plot.svg.select('.bv-y-axis').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(8));
+    plot.svg.select('[data-axis="x"]').text(xLabel).attr('x',b.right).attr('y',h-4);plot.svg.select('[data-axis="y"]').text(yLabel).attr('x',3).attr('y',14);
+    plot.paths.select('.bv-zero').attr('x1',b.left).attr('x2',b.right).attr('y1',y(0)).attr('y2',y(0));
+    return {x,y,...b};
+  }
+  const main=makePlot(el('plot'),'bv-main-clip','Candidate functions and the endpoint target. Orange circles mark required values of y.');
+  main.paths.append('line').attr('class','bv-guide').attr('data-probe','');
+  main.paths.append('line').attr('stroke',orange).attr('stroke-dasharray','5 3').attr('data-error','');
+  main.paths.append('line').attr('stroke',teal).attr('stroke-width',2).attr('stroke-dasharray','4 3').attr('data-tangent','');
+  main.paths.append('circle').attr('r',4).attr('fill',purple).attr('data-probe-point','');
+  const endpoints=main.svg.append('g');endpoints.append('circle').attr('r',7).attr('fill','var(--site-paper)').attr('stroke',orange).attr('stroke-width',2).attr('data-target','');endpoints.append('circle').attr('r',4).attr('fill',purple).attr('data-endpoint','');endpoints.append('circle').attr('r',3).attr('fill',purple).attr('data-left','');
+  const mainHit=main.svg.append('rect').attr('fill','transparent').attr('aria-hidden','true');
+  const spec=makePlot(el('residual'),'bv-residual-clip','Right endpoint value against lambda. Zeros select positive eigenvalues.');
+  spec.paths.append('g').attr('data-roots','');spec.paths.append('line').attr('class','bv-guide').attr('data-selected','');spec.paths.append('circle').attr('r',5).attr('fill',orange).attr('data-selected-point','');
+  const specHit=spec.svg.append('rect').attr('fill','transparent').attr('aria-hidden','true');let specChart,rootData=[];
+  function updatePlayback(){el('trace').textContent=reduced.matches?'Advance along the curve':playing==='trace'?'Pause tracing':'Trace the curve';el('trace').setAttribute('aria-pressed',String(playing==='trace'));el('scan').textContent=playing==='scan'?'Pause scan':'Scan to the next eigenvalue';el('scan').setAttribute('aria-pressed',String(playing==='scan'));el('scan').disabled=!M.next(state)&&playing!=='scan';}
+  function pause(){playing='';cancelAnimationFrame(raf);raf=0;last=0;scan=null;updatePlayback();}
+  function point(){const end=state.view==='endpoints'?M.cases[state.caseId].b:M.L(state),x=state.progress*end;return state.view==='endpoints'?M.endpointAt(state,x):state.view==='operator'&&state.poly?M.polynomial(state,x):M.candidate(state,x);}
+  function renderProbe(){
+    const p=point();el('progress').value=state.progress;el('progress-out').textContent=fmt(p.x,4);
+    el('live').textContent='At x = '+fmt(p.x,4)+': y = '+fmt(p.y,4)+(state.view==='operator'?' · −y″ = '+fmt(p.out,4)+' · λy = '+fmt(p.scaled,4):' · y′ = '+fmt(p.dy,4));
+    if(!chart)return;main.paths.select('[data-probe]').attr('x1',chart.x(p.x)).attr('x2',chart.x(p.x)).attr('y1',chart.top).attr('y2',chart.bottom);
+    main.paths.select('[data-probe-point]').attr('cx',chart.x(p.x)).attr('cy',chart.y(p.y));
+  }
+  function drawSpectrum(){
+    if(state.view!=='eigenvalues')return;
+    const key=state.bc+','+state.length+','+el('residual').clientWidth;
+    if(key!==spectrumKey){
+      spectrumKey=key;specChart=axes(spec,el('residual'),[-4,30],[-1.15,1.15],el('residual').clientWidth<450?280:305,'Parameter λ','Unit-amplitude endpoint R(λ)');
+      spec.svg.select('.bv-x-axis').call(d3.axisBottom(specChart.x).tickValues(el('residual').clientWidth<450?[-4,0,10,20,30]:[-4,0,5,10,15,20,25,30]).tickSize(0).tickPadding(8));
+      const data=d3.range(0,851).map(i=>({x:-4+34*i/850,y:M.residual(state,-4+34*i/850)}));
+      spec.paths.select('.bv-lines').selectAll('path').data([data]).join('path').attr('class','bv-line').attr('stroke',purple).attr('d',d3.line().x(p=>specChart.x(p.x)).y(p=>specChart.y(p.y)));
+      rootData=M.spectrum(state);spec.paths.select('[data-roots]').selectAll('circle').data(rootData,p=>p.n).join('circle').attr('cx',p=>specChart.x(p.lambda)).attr('cy',specChart.y(0)).attr('r',4).attr('fill',teal);
+      specHit.attr('x',specChart.left).attr('y',specChart.top).attr('width',specChart.right-specChart.left).attr('height',specChart.bottom-specChart.top);
+      spec.svg.select('title').text('Zeros of the normalized right endpoint value for '+(state.bc==='values'?'two zero values':'a zero initial slope and a zero right value')+' on [0, '+lengthName()+'].');
+    }
+    const R=M.residual(state);spec.paths.select('[data-selected]').attr('x1',specChart.x(state.lambda)).attr('x2',specChart.x(state.lambda)).attr('y1',specChart.top).attr('y2',specChart.bottom);
+    spec.paths.select('[data-selected-point]').attr('cx',specChart.x(state.lambda)).attr('cy',specChart.y(R));
+    el('spectrum-value').textContent='λ = '+fmt(state.lambda,6)+' · R(λ) = '+fmt(R,6)+(M.mode(state)?' · eigenvalue n = '+M.mode(state):'');
+    el('spectrum-formula').textContent=state.bc==='values'?'λₙ = (nπ/L)², n = 1, 2, 3, …':'λₙ = [(2n − 1)π/(2L)]², n = 1, 2, 3, …';
+  }
+  function drawMain(){
+    const data=M.sample(state),end=state.view==='endpoints'?M.cases[state.caseId].b:M.L(state),target=state.view==='endpoints'?M.cases[state.caseId].target:0;
+    let series=[];
+    if(state.view==='endpoints'&&state.family)for(const C of [-2,-1,-.5,0,.5,1,2])series.push({id:'family'+C,color:muted,dash:'3 4',width:1.1,key:'y',data:M.sample({...state,C})});
+    series.push({id:'y',label:state.view==='operator'?'Input y':'Current y',color:purple,width:3,key:'y',data});
+    if(state.view==='operator')series.push({id:'out',label:'Output −y″',color:orange,width:3,key:'out',data},{id:'scaled',label:'Scaled input λy',color:teal,dash:'7 5',width:2.2,key:'scaled',data});
+    let extent=2.3;if(state.view==='operator')for(const s of series)for(const p of s.data)extent=Math.max(extent,Math.abs(p[s.key])*1.13);
+    chart=axes(main,el('plot'),[0,end],[-extent,extent],el('plot').clientWidth<450?330:365,'Position x',state.view==='operator'?'Function value':'Value y');
+    const endName=state.view==='endpoints'?(state.caseId==='unique'?'π/4':'π/2'):lengthName();
+    const midName=state.view==='endpoints'?(state.caseId==='unique'?'π/8':'π/4'):({pi:'π/2',two:'1','two-pi':'π'})[state.length];
+    main.svg.select('.bv-x-axis').call(d3.axisBottom(chart.x).tickValues([0,end/2,end]).tickFormat(v=>v===0?'0':v===end?endName:midName).tickSize(0).tickPadding(8));
+    main.paths.select('.bv-lines').selectAll('path').data(series,s=>s.id).join('path').attr('class','bv-line').attr('stroke',s=>s.color).attr('stroke-width',s=>s.width).attr('stroke-dasharray',s=>s.dash||null).attr('opacity',s=>s.id.startsWith('family')?.5:1).attr('d',s=>d3.line().x(p=>chart.x(p.x)).y(p=>chart.y(p[s.key]))(s.data));
+    const lastPoint=data[data.length-1],first=data[0];endpoints.select('[data-target]').attr('cx',chart.x(end)).attr('cy',chart.y(target));endpoints.select('[data-endpoint]').attr('cx',chart.x(end)).attr('cy',chart.y(lastPoint.y));
+    endpoints.select('[data-left]').attr('cx',chart.x(0)).attr('cy',chart.y(first.y));
+    main.paths.select('[data-error]').attr('x1',chart.x(end)).attr('x2',chart.x(end)).attr('y1',chart.y(target)).attr('y2',chart.y(lastPoint.y));
+    main.paths.select('[data-tangent]').attr('display',state.view==='endpoints'||state.bc==='mixed'?null:'none').attr('x1',chart.x(0)).attr('x2',chart.x(.12*end)).attr('y1',chart.y(first.y)).attr('y2',chart.y(first.y+first.dy*.12*end));
+    mainHit.attr('x',chart.left).attr('y',chart.top).attr('width',chart.right-chart.left).attr('height',chart.bottom-chart.top);
+    legend(series.filter(s=>s.label));el('endpoint').textContent='Right endpoint: y = '+fmt(lastPoint.y,6)+' · target = '+fmt(target)+' · error = '+fmt(lastPoint.y-target,6);
+    main.svg.select('title').text(el('title').textContent+'. '+el('endpoint').textContent);renderProbe();
+  }
+  function render(){
+    const endpoint=state.view==='endpoints',operator=state.view==='operator',n=M.mode(state);
+    el('endpoint-controls').hidden=!endpoint;el('eigen-controls').hidden=endpoint;el('operator-controls').hidden=!operator;el('function').hidden=!operator;el('spectrum').hidden=state.view!=='eigenvalues';el('scan').hidden=state.view!=='eigenvalues';el('checks').hidden=endpoint;
+    for(const b of root.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',String(b.dataset.view===state.view));
+    el('title').textContent=endpoint?'Can you hit the endpoint?':operator?'What makes a function an eigenfunction?':'Which λ values reach the target?';
+    el('equation').textContent=endpoint?'y″ + 4y = 0, y(0) = 0, '+M.cases[state.caseId].label:(operator?'−y″ = λy':'y″ + λy = 0')+', '+(state.bc==='values'?'y(0) = 0':'y′(0) = 0')+', y('+lengthName()+') = 0';
+    el('C').value=state.C;el('C-out').textContent='C = '+fmt(state.C,2);el('slope').textContent='Initial slope y′(0) = 2C = '+fmt(2*state.C,2);el('family').checked=state.family;el('reveal').checked=state.reveal;
+    const cls=M.classification(state);el('match').disabled=cls.kind!=='unique';el('match').textContent=cls.kind==='unique'?'Match the target':cls.kind==='infinite'?'Every C already meets the target':'This target is unreachable';el('count').hidden=!state.reveal;
+    el('count').textContent=cls.kind==='unique'?'Exactly one solution: C = '+fmt(cls.C)+'.':cls.kind==='infinite'?'Infinitely many solutions: every C reaches the endpoint value zero.':'No solution: every candidate ends at zero, but the target is one.';
+    for(const b of root.querySelectorAll('[data-case]'))b.setAttribute('aria-pressed',String(b.dataset.case===state.caseId));
+    el('bc').value=state.bc;el('length').value=state.length;el('lambda').value=state.lambda;el('lambda-out').textContent=fmt(state.lambda,6);el('A').value=state.A;el('A-out').textContent=fmt(state.A,2);
+    el('lambda').setAttribute('aria-valuetext','λ = '+fmt(state.lambda,6)+(n?', eigenvalue n = '+n:''));
+    for(const b of root.querySelectorAll('[data-lambda]'))b.setAttribute('aria-pressed',String(Math.abs(Number(b.dataset.lambda)-state.lambda)<1e-10));
+    for(const b of root.querySelectorAll('[data-mode]')){const j=Number(b.dataset.mode);b.textContent='n = '+j+' · λ = '+fmt(M.eigenvalue(state,j),6);b.setAttribute('aria-pressed',String(n===j));}
+    for(const b of root.querySelectorAll('[data-test]'))b.setAttribute('aria-pressed',String((b.dataset.test==='polynomial')===state.poly));
+    el('function').textContent=state.poly?(state.bc==='values'?'Test function: y = 4A x(L − x)/L²':'Test function: y = A[1 − (x/L)²]'):state.lambda>0?'Candidate family: y = C '+(state.bc==='values'?'sin':'cos')+'(√λ x)':state.lambda===0?'Candidate family: y = '+(state.bc==='values'?'Cx':'C'):'Candidate family: y = C(e^(μx) '+(state.bc==='values'?'−':'+')+' e^(−μx)), μ = √(−λ)';
+    const check=M.operatorCheck({...state,poly:operator&&state.poly});el('checks').replaceChildren();
+    for(const [label,pass]of [['ODE identity: '+(check.relation?'holds':'fails'),check.relation],['Both boundaries: '+(Math.abs(check.right)<1e-10?'hold':'missed'),Math.abs(check.right)<1e-10],['Nonzero function: yes',true]]){const span=document.createElement('span');span.textContent=label;span.className=pass?'bv-pass':'bv-fail';el('checks').append(span);}
+    el('observation').textContent=endpoint?'The left endpoint stays fixed. Change the initial slope to move the right endpoint toward the orange target.':operator?state.poly?'This polynomial meets both boundaries, but −y″ = λy fails as an identity on the interval. Inspect several points.':check.eigenfunction?'The output −y″ agrees with λy everywhere, and both boundaries hold. This nonzero curve is an eigenfunction.':'The output −y″ agrees with λy everywhere. The right boundary is missed, so this candidate is not an eigenfunction of this BVP.':n?'Both boundaries hold for this nonzero curve. λ = '+fmt(state.lambda,6)+' is eigenvalue n = '+n+'.':state.lambda<=0?'For these boundary conditions, λ ≤ 0 allows only the zero solution. This nonzero candidate meets the left condition but misses the right endpoint.':'This candidate solves the ODE and the left condition, but misses the right endpoint. Try a mode button or scan to the next eigenvalue.';
+    updatePlayback();drawMain();drawSpectrum();
+  }
+  function changed(){pause();state.progress=1;render();announce();save();}
+  for(const b of root.querySelectorAll('[data-view]'))b.addEventListener('click',()=>{state.view=b.dataset.view;changed();history.replaceState(null,'','?view='+state.view+'#boundary-lab');});
+  for(const b of root.querySelectorAll('[data-case]'))b.addEventListener('click',()=>{state.caseId=b.dataset.case;state.reveal=false;changed();});
+  for(const key of ['C','lambda','A'])el(key).addEventListener('input',e=>{state[key]=Number(e.target.value);changed();});
+  el('lambda').addEventListener('keydown',e=>{const steps={ArrowRight:.01,ArrowUp:.01,ArrowLeft:-.01,ArrowDown:-.01,PageUp:.1,PageDown:-.1};if(Object.hasOwn(steps,e.key)||e.key==='Home'||e.key==='End'){e.preventDefault();state.lambda=e.key==='Home'?-4:e.key==='End'?30:Math.max(-4,Math.min(30,Number((state.lambda+steps[e.key]).toFixed(8))));changed();}});
+  for(const b of root.querySelectorAll('[data-lambda]'))b.addEventListener('click',()=>{state.lambda=Number(b.dataset.lambda);changed();});
+  for(const key of ['bc','length'])el(key).addEventListener('change',e=>{state[key]=e.target.value;changed();});
+  for(const key of ['family','reveal'])el(key).addEventListener('change',e=>{state[key]=e.target.checked;changed();});
+  for(const b of root.querySelectorAll('[data-test]'))b.addEventListener('click',()=>{state.poly=b.dataset.test==='polynomial';changed();});
+  for(const b of root.querySelectorAll('[data-mode]'))b.addEventListener('click',()=>{state.lambda=M.eigenvalue(state,Number(b.dataset.mode));changed();});
+  el('match').addEventListener('click',()=>{const result=M.classification(state);if(result.kind==='unique'){state.C=result.C;changed();}});
+  el('reset').addEventListener('click',()=>{pause();state=M.fresh();render();announce();save();history.replaceState(null,'',location.pathname+'#boundary-lab');});
+  el('progress').addEventListener('input',e=>{pause();state.progress=Number(e.target.value);renderProbe();save();});
+  mainHit.on('click',event=>{pause();const end=state.view==='endpoints'?M.cases[state.caseId].b:M.L(state);state.progress=Math.max(0,Math.min(1,chart.x.invert(d3.pointer(event,main.svg.node())[0])/end));renderProbe();save();});
+  specHit.on('click',event=>{
+    const [px,py]=d3.pointer(event,spec.svg.node());
+    const nearest=Math.abs(specChart.y(0)-py)<14?rootData.reduce((best,p)=>!best||Math.abs(specChart.x(p.lambda)-px)<Math.abs(specChart.x(best.lambda)-px)?p:best,null):null;
+    state.lambda=nearest&&Math.abs(specChart.x(nearest.lambda)-px)<9?nearest.lambda:Math.max(-4,Math.min(30,Math.round(specChart.x.invert(px)*1000)/1000));changed();
+  });
+  function tick(now){
+    if(!playing)return;const dt=last?Math.min(.1,(now-last)/1000):0;last=now;
+    if(playing==='trace'){state.progress=Math.min(1,state.progress+dt/4);renderProbe();if(state.progress>=1){pause();announce();save();return;}}
+    else{scan.progress=Math.min(1,scan.progress+dt/2.5);state.lambda=scan.start+(scan.target-scan.start)*scan.progress;render();if(scan.progress>=1){state.lambda=scan.target;pause();render();announce();save();return;}}
+    raf=requestAnimationFrame(tick);
+  }
+  el('trace').addEventListener('click',()=>{if(reduced.matches){pause();state.progress=state.progress>=1?0:Math.min(1,state.progress+.1);renderProbe();save();return;}if(playing==='trace'){pause();save();return;}pause();if(state.progress>=1)state.progress=0;playing='trace';last=0;updatePlayback();raf=requestAnimationFrame(tick);});
+  el('scan').addEventListener('click',()=>{if(playing==='scan'){pause();save();return;}const target=M.next(state);if(!target)return;pause();if(reduced.matches){state.lambda=target.lambda;changed();return;}scan={start:state.lambda,target:target.lambda,progress:0};playing='scan';last=0;state.progress=1;updatePlayback();raf=requestAnimationFrame(tick);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();save();}});reduced.addEventListener('change',()=>{pause();save();});
+  new ResizeObserver(()=>{const key=el('plot').clientWidth+','+el('residual').clientWidth;if(key!==widthKey){widthKey=key;drawMain();drawSpectrum();}}).observe(document.getElementById('main-content'));
+  render();
+})();
+</script>
