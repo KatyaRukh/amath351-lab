@@ -21,7 +21,7 @@ separable and exact equations, the AI self-improvement growth models, phase line
 and Euler’s method.
 Chapter 2 includes initial conditions, characteristic equations, independence,
 Wronskian geometry, nonhomogeneous solutions, complex roots and real solutions,
-free mechanical vibrations, and undetermined coefficients.
+free and forced mechanical vibrations, resonance, and undetermined coefficients.
 Future examples are explicitly labeled as planned and have no inactive or broken
 experiment links. Chapter groupings follow the
 Autumn 2026 syllabus, rather than the textbook's chapter numbering.
@@ -392,6 +392,41 @@ steps with reduced motion. Source and mathematical helpers are
 reference solutions, the ODE, initial values, continuity through critical
 damping, and energy conservation or dissipation. Lecture source files are not
 published with the Lab.
+
+## Section 3.6: forced vibrations and resonance
+
+[Drive the oscillator](https://shzhang3.github.io/amath351-lab/chapters/higher-order/resonance/)
+completes the combined Sections 3.4/3.6 lecture. The existing free-vibration
+page covers the natural period and the four damping cases. Its lecture link
+restores m = 1, k = 4, x(0) = 1, x′(0) = 0 and the shared comparison.
+
+The forced-motion page has six exact lecture presets: bounded forcing
+cos(t), beats with cos(1.8t), undamped resonance with cos(2t), damping c = 2
+with cos(2t), and the final k = 9, F₀ = 6, ω = 3 practice with c = 0 or 2.
+Preset links use `?example=beats` (or `bounded`, `resonance`, `damped`,
+`practice-free`, `practice-damped`). Change driving frequency, resistance,
+force amplitude, or either initial value. The mass and spring animation,
+external-force arrow, and exact displacement curve share one time slider.
+
+Optional overlays show the homogeneous and particular components, the
+zero-data undamped envelope, and both c = 0 and c = 2 solutions. The axes
+stay fixed throughout playback and contain all visible curves over the
+chosen window (up to 120 seconds). An undamped resonant envelope grows
+linearly; it is not described as a finite-time blow-up.
+
+A second plot compares periodic-component amplitudes for positive damping.
+Click it or use the keyboard-accessible frequency slider to vary ω. The
+selected damping is included, and its response peak is evaluated analytically.
+For c = 0 the text explains the singularity at ω₀; no finite undamped
+response curve is drawn through it. Without damping, the homogeneous part
+is not called a decaying transient or steady-state limit.
+
+Playback starts paused, pauses on edits and hiding, and becomes discrete
+advances with reduced motion. Browser-local state is validated before use.
+**src/resonance.html** and **src/forced-vibration-model.cjs** reuse the exact
+homogeneous solver in **src/vibration-model.cjs**. Tests independently check
+the six lecture solutions, ODE residuals, initial data, decomposition,
+near-resonance stability, envelope bounds, frequency peaks, and restored state.
 
 ## Section 3.2: the lecture's dependent polynomials
 

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore the lecture’s bounded response, beats, resonance, and damped motion. Separate transient and steady-state curves, then find the response peak.">
+  <meta name="theme-color" content="#624298">
+  <title>Drive the oscillator · AMATH 351 Lab</title>
+  <link rel="canonical" href="https://shzhang3.github.io/amath351-lab/chapters/higher-order/resonance/">
+  <link rel="stylesheet" href="../../../assets/lab.css">
+</head>
+<body>
+  <a class="site-skip" href="#main-content">Skip to content</a>
+  <div class="site-wrap">
+    <header class="site-header">
+      <a class="site-brand" href="../../../"><span class="site-brand-mark" aria-hidden="true">y′</span>AMATH 351 / Lab</a>
+      <nav aria-label="Main navigation"><a href="../../../">Chapters</a><a href="https://shzhang3.github.io/#teaching">Teaching</a><a href="https://github.com/shzhang3/amath351-lab" target="_blank" rel="noopener">GitHub ↗</a></nav>
+    </header>
+<nav class="site-breadcrumbs" aria-label="Breadcrumb"><a href="../../../">All chapters</a><span aria-hidden="true">/</span><a href="../">Chapter 02: Higher-order linear equations</a><span aria-hidden="true">/</span><span aria-current="page">Drive the oscillator</span></nav>
+    <main id="main-content" tabindex="-1"><noscript>Enable JavaScript to use the interactive plots. Explanations and navigation remain available.</noscript><section class="lab-intro">
+  <div class="site-kicker">Section 3.6 · Forced vibrations and resonance</div>
+  <h1>Drive the oscillator.</h1>
+  <p class="lab-math">m x″ + c x′ + k x = F₀ cos(ωt)</p>
+  <p>Start with the lecture examples. Watch the mass, follow its displacement, and compare the driving frequency with the natural frequency. Which motions stay bounded?</p>
+  <p class="lab-small">First explore <a href="../vibrations/?lecture=3.6#vib-lab">free motion and the four damping cases</a> from Section 3.4.</p>
+</section>
+<div id="forced-lab" class="lab-interactive">
+  <div class="rf-presets" role="group" aria-label="Lecture examples">
+    <button type="button" class="lab-button" data-preset="bounded" aria-pressed="true">1 · Bounded response</button>
+    <button type="button" class="lab-button" data-preset="beats" aria-pressed="false">2 · Beats</button>
+    <button type="button" class="lab-button" data-preset="resonance" aria-pressed="false">3 · Resonance</button>
+    <button type="button" class="lab-button" data-preset="damped" aria-pressed="false">4 · With damping</button>
+  </div>
+  <div class="lab-row rf-practice" role="group" aria-label="Final lecture practice">
+    <span class="lab-small">Final practice, k = 9 and F₀ = 6:</span>
+    <button type="button" class="lab-button" data-preset="practice-free" aria-pressed="false">A · No damping</button>
+    <button type="button" class="lab-button" data-preset="practice-damped" aria-pressed="false">B · With damping</button>
+  </div>
+  <h2 id="rf-title">A bounded forced response</h2>
+  <p class="lab-math" id="rf-equation">x″ + 4x = cos(t)</p>
+  <p class="lab-small" id="rf-initial">m = 1 kg · k = 4 N/m · x(0) = 0 m · x′(0) = 0 m/s</p>
+  <div class="rf-parameters lab-controls">
+    <label class="lab-label" for="rf-omega"><span class="lab-row">Driving frequency ω <output id="rf-omega-out" for="rf-omega">1.00 rad/s</output></span><input class="lab-slider" id="rf-omega" type="range" min="0.1" max="4" step="0.01" value="1"></label>
+    <label class="lab-label" for="rf-c"><span class="lab-row">Damping c <output id="rf-c-out" for="rf-c">0.00 kg/s</output></span><input class="lab-slider" id="rf-c" type="range" min="0" max="6" step="0.05" value="0"></label>
+    <label class="lab-label" for="rf-F"><span class="lab-row">Force amplitude F₀ <output id="rf-F-out" for="rf-F">1.0 N</output></span><input class="lab-slider" id="rf-F" type="range" min="0" max="6" step="0.1" value="1"></label>
+  </div>
+  <div class="lab-row rf-frequency-note"><span id="rf-natural" class="lab-small">Natural frequency ω₀ = 2.00 rad/s</span><button type="button" class="lab-button" id="rf-match">Match ω to ω₀</button></div>
+  <details class="rf-initial-controls">
+    <summary>Change the initial position or velocity</summary>
+    <div class="lab-controls rf-initial-grid">
+      <label class="lab-label" for="rf-x0"><span class="lab-row">Initial position x(0) <output id="rf-x0-out" for="rf-x0">0.0 m</output></span><input class="lab-slider" id="rf-x0" type="range" min="-2" max="2" step="0.1" value="0"></label>
+      <label class="lab-label" for="rf-v0"><span class="lab-row">Initial velocity x′(0) <output id="rf-v0-out" for="rf-v0">0.0 m/s</output></span><input class="lab-slider" id="rf-v0" type="range" min="-4" max="4" step="0.1" value="0"></label>
+    </div>
+  </details>
+  <p id="rf-observation" class="rf-observation">The response combines two frequencies and remains bounded.</p>
+  <div class="rf-visuals">
+    <div><div id="rf-motion"></div><p class="lab-small lab-numbers" id="rf-live"></p></div>
+    <div><div id="rf-plot"></div><div class="lab-row lab-small rf-legend" id="rf-legend" aria-label="Displacement curve legend"></div></div>
+  </div>
+  <div class="rf-options">
+    <label for="rf-parts"><input type="checkbox" id="rf-parts"> Show x<sub>c</sub> and x<sub>p</sub></label>
+    <label for="rf-envelope"><input type="checkbox" id="rf-envelope" checked> Show amplitude envelope</label>
+    <label for="rf-compare"><input type="checkbox" id="rf-compare"> Compare c = 0 and c = 2</label>
+  </div>
+  <p class="lab-small" id="rf-envelope-note"></p>
+  <div class="lab-row rf-playback">
+    <button type="button" class="lab-button lab-primary" id="rf-play">Play motion</button>
+    <button type="button" class="lab-button" id="rf-rewind">Back to t = 0</button>
+    <label for="rf-duration">Time window <select id="rf-duration"><option value="12">12 s</option><option value="18" selected>18 s</option><option value="24">24 s</option><option value="65">65 s</option><option value="120">120 s</option></select></label>
+    <label for="rf-speed">Playback <select id="rf-speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+  </div>
+  <label class="lab-label rf-time" for="rf-time"><span class="lab-row">Time t <output id="rf-time-out" for="rf-time">0.00 s</output></span><input class="lab-slider" id="rf-time" type="range" min="0" max="18" step="0.01" value="0"></label>
+  <p class="lab-small">The axes stay fixed during playback. Select the graph or scrub time to inspect a point. Use a longer time window to follow the growing resonant envelope.</p>
+  <p class="rf-sr-only" role="status" aria-live="polite" id="rf-status"></p>
+</div>
+<section id="frequency-response" class="rf-response lab-interactive" aria-labelledby="rf-response-heading">
+  <div class="site-kicker">Change the frequency, compare the amplitude</div>
+  <h2 id="rf-response-heading">Where is the response largest?</h2>
+  <p>Each curve gives the amplitude of the periodic particular solution. For positive damping, it is the steady-state amplitude after the transient fades.</p>
+  <div id="rf-response-plot"></div>
+  <div class="lab-row lab-small rf-legend" id="rf-response-legend" aria-label="Frequency response curve legend"></div>
+  <p id="rf-response-readout" class="lab-numbers"></p>
+  <p id="rf-response-note" class="lab-small"></p>
+  <p class="lab-small">Select this graph to change ω above. The four reference curves use c = 0.5, 1, 2, and 4 with the same mass, spring, and force amplitude.</p>
+</section>
+<section class="lab-explanation">
+  <details>
+    <summary>Connect the pictures to the lecture</summary>
+    <ol>
+      <li><strong>Bounded response:</strong> x″ + 4x = cos t. The driving frequency 1 differs from the natural frequency 2. Both initial values are zero.</li>
+      <li><strong>Beats:</strong> x″ + 4x = cos(1.8t). Nearby frequencies produce fast oscillations with a slow envelope. For this fixed frequency, the solution is bounded.</li>
+      <li><strong>Resonance:</strong> x″ + 4x = cos(2t). The driving frequency matches the natural frequency. The undamped response has a linearly growing envelope.</li>
+      <li><strong>With damping:</strong> x″ + 2x′ + 4x = cos(2t). Show the two components: x<sub>c</sub> decays, while x<sub>p</sub> remains periodic.</li>
+      <li><strong>Final practice:</strong> compare x″ + 9x = 6cos(3t) and x″ + 2x′ + 9x = 6cos(3t), both with zero initial values. Predict which trial needs a factor of t before revealing the curves.</li>
+    </ol>
+  </details>
+  <details>
+    <summary>Why does the resonant trial need a factor of t?</summary>
+    <p>With no damping, cos(ω₀t) and sin(ω₀t) already solve the homogeneous equation. Their linear combinations produce zero under the differential operator, so they cannot produce a nonzero driving force at the same frequency.</p>
+    <p class="lab-math">x<sub>p</sub> = t[A cos(ω₀t) + B sin(ω₀t)]</p>
+    <p>Substitution gives x<sub>p</sub> = [F₀/(2mω₀)] t sin(ω₀t). This is the growing envelope in the graph. The solution stays finite at every finite time; its amplitude grows without bound as time increases.</p>
+    <p>Revisit <a href="../undetermined-coefficients/">what multiplying a trial by x changes</a> in Section 3.5.</p>
+  </details>
+  <details>
+    <summary>What does the frequency–amplitude graph measure?</summary>
+    <p class="lab-math">R(ω) = F₀ / √[(k − mω²)² + c²ω²]</p>
+    <p>This is the amplitude of x<sub>p</sub> = A cos(ωt) + B sin(ωt), so R = √(A² + B²). It is not generally the amplitude of the complete solution during the transient.</p>
+    <p>Positive damping keeps R finite at ω = ω₀. With weak damping, the response peak occurs slightly below ω₀; sufficiently strong damping removes the positive-frequency peak. In the ideal undamped model the formula has a singularity at ω₀, where a periodic particular solution no longer exists.</p>
+    <p>The displayed curves are evaluated analytically. Sampled paths are for drawing, rather than Euler approximations. The model assumes an ideal linear spring, viscous damping, and a sinusoidal external force.</p>
+  </details>
+</section>
+<style>
+  #forced-lab h2,.rf-response h2{font-size:26px;margin:22px 0 8px;}
+  #forced-lab .rf-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
+  #forced-lab [data-preset][aria-pressed="true"]{border-color:var(--site-purple);background:var(--site-soft);color:var(--site-purple);}
+  #forced-lab .rf-practice{gap:8px;margin:14px 0 22px;}
+  #forced-lab .rf-practice .lab-button{font-size:14px;padding:9px 14px;}
+  #forced-lab #rf-equation{margin:0 0 6px;}
+  #forced-lab .rf-parameters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;}
+  #forced-lab .rf-frequency-note{gap:16px;margin:10px 0 14px;}
+  #forced-lab .rf-frequency-note .lab-button{padding:8px 14px;font-size:14px;}
+  #forced-lab .rf-initial-controls summary{cursor:pointer;color:var(--site-purple);}
+  #forced-lab .rf-initial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:20px;}
+  #forced-lab .rf-observation{border-left:3px solid var(--site-purple);padding-left:14px;margin:22px 0 12px;}
+  #forced-lab .rf-visuals{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.65fr);gap:20px;align-items:center;}
+  #forced-lab .rf-visuals>div{min-width:0;}
+  #forced-lab svg,.rf-response svg{width:100%;display:block;}
+  #forced-lab svg text,.rf-response svg text{fill:var(--site-ink);font-size:12px;}
+  #forced-lab .rf-structure{stroke:var(--site-muted);stroke-width:1.5;fill:none;}
+  #forced-lab .rf-spring{stroke:var(--site-purple);stroke-width:2;fill:none;}
+  #forced-lab .rf-damper{stroke:var(--site-teal);stroke-width:2;fill:none;}
+  #forced-lab .rf-mass{stroke:var(--site-purple);stroke-width:2;fill:var(--site-purple);fill-opacity:.12;}
+  #forced-lab .rf-force{stroke:var(--site-orange);stroke-width:3;fill:none;}
+  .rf-grid line{stroke:var(--site-line);}.rf-grid .domain,.rf-axis .domain{display:none;}
+  .rf-guide{stroke:var(--site-muted);stroke-dasharray:4 4;}.rf-zero{stroke:var(--site-muted);opacity:.5;}
+  .rf-frame{fill:none;stroke:var(--site-line);}.rf-line{fill:none;stroke-width:2;}.rf-total{stroke-width:3;}
+  .rf-legend{gap:6px 16px;margin:8px 0;}.rf-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .rf-legend i{display:inline-block;width:24px;border-top:2px solid;}
+  #forced-lab .rf-options{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:18px;}
+  #forced-lab .rf-options label{display:inline-flex;align-items:center;gap:7px;font-size:14px;min-height:44px;}
+  #forced-lab input[type="checkbox"]{accent-color:var(--site-purple);width:18px;height:18px;}
+  #forced-lab .rf-playback{gap:10px;margin:20px 0;}
+  #forced-lab .rf-playback label{display:inline-flex;align-items:center;gap:8px;font-size:14px;}
+  #forced-lab select{padding:10px;border:1px solid var(--site-line);border-radius:8px;background:var(--site-paper);color:var(--site-ink);font:inherit;}
+  #forced-lab .rf-time{max-width:none;}
+  .rf-response{margin-top:36px;}.rf-response h2{margin-top:8px;}
+  .rf-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  @media(max-width:900px){#forced-lab .rf-visuals{grid-template-columns:minmax(0,1fr);}#rf-motion{max-width:450px;margin:auto;}}
+  @media(max-width:680px){#forced-lab .rf-presets{grid-template-columns:repeat(2,minmax(0,1fr));}#forced-lab .rf-parameters,#forced-lab .rf-initial-grid{grid-template-columns:minmax(0,1fr);gap:16px;}.rf-response h2,#forced-lab h2{font-size:23px;}}
+</style>
+<script src="../../../assets/vendor/d3.v7.9.0.min.js"></script>
+<script>// Exact free mass-spring-damper motion, measured from equilibrium.
+(function (root) {
+  const bounds={m:[.5,3],k:[1,9],c:[0,24],x0:[-2,2],v0:[-4,4],time:[0,12]};
+  const defaults={m:1,k:4,c:0,x0:1,v0:0,time:0,compare:false};
+  const fresh=()=>({...defaults});
+  const critical=s=>2*Math.sqrt(s.m*s.k);
+  const dampingFor=(s,kind)=>({undamped:0,underdamped:critical(s)/4,critical:critical(s),overdamped:2*critical(s)})[kind];
+  function coefficients(s){
+    const p=s.c/(2*s.m),w2=s.k/s.m,disc=p*p-w2;
+    const criticalCase=Math.abs(disc)<=1e-12*Math.max(1,w2,p*p);
+    const kind=s.c===0?'undamped':criticalCase?'critical':disc<0?'underdamped':'overdamped';
+    let roots;
+    if(disc<0&&!criticalCase){const q=Math.sqrt(-disc);roots=[{re:-p,im:q},{re:-p,im:-q}];}
+    else if(criticalCase)roots=[{re:-p,im:0},{re:-p,im:0}];
+    else{const q=Math.sqrt(disc);roots=[{re:-w2/(p+q),im:0},{re:-p-q,im:0}];}
+    return {p,w2,disc,kind,roots,critical:critical(s),period:2*Math.PI/Math.sqrt(w2)};
+  }
+  function at(s,t){
+    const g=coefficients(s),{p,w2,disc,kind}=g;
+    let C,S;
+    if(kind==='critical'){const e=Math.exp(-p*t);C=e;S=t*e;}
+    else if(disc<0){
+      const q=Math.sqrt(-disc),u=q*t,e=Math.exp(-p*t);
+      C=e*Math.cos(u);S=e*(Math.abs(u)<1e-5?t*(1-u*u/6+u**4/120):Math.sin(u)/q);
+    }else{
+      const q=Math.sqrt(disc),slow=Math.exp(g.roots[0].re*t),fast=Math.exp(g.roots[1].re*t);
+      C=(slow+fast)/2;S=slow*(-Math.expm1(-2*q*t))/(2*q);
+    }
+    const x=t===0?s.x0:s.x0*C+(s.v0+p*s.x0)*S;
+    const v=t===0?s.v0:s.v0*C-(p*s.v0+w2*s.x0)*S;
+    return {t,x,v,a:-(s.c*v+s.k*x)/s.m,energy:(s.m*v*v+s.k*x*x)/2};
+  }
+  function sample(s,count=481){return Array.from({length:count},(_,i)=>at(s,12*i/(count-1)));}
+  // The energy bound keeps one shared spatial scale while c changes.
+  const amplitudeBound=s=>Math.sqrt(s.x0*s.x0+s.m/s.k*s.v0*s.v0);
+  function restore(raw){
+    const s=fresh();if(raw?.version!==1)return s;
+    for(const [key,[lo,hi]]of Object.entries(bounds))if(typeof raw[key]==='number'&&Number.isFinite(raw[key]))s[key]=Math.max(lo,Math.min(hi,raw[key]));
+    s.compare=raw.compare===true;return s;
+  }
+  const M=Object.freeze({bounds,fresh,critical,dampingFor,coefficients,at,sample,amplitudeBound,restore});
+  if(typeof module==='object'&&module.exports)module.exports=M;else root.VibrationModel=M;
+})(globalThis);
+</script>
+<script>// Analytic responses of m*x'' + c*x' + k*x = F*cos(omega*t).
+(function(root){
+  const Free=typeof module==='object'&&module.exports?require('./vibration-model.cjs'):root.VibrationModel;
+  const defaults={m:1,k:4,c:0,F:1,omega:1,x0:0,v0:0,time:0,duration:18,speed:1,parts:false,envelope:true,compare:false};
+  const presets=Object.freeze({
+    bounded:{title:'A bounded forced response',duration:18,omega:1},
+    beats:{title:'Nearby frequencies produce beats',duration:65,speed:4,omega:1.8},
+    resonance:{title:'Resonance: a growing envelope',duration:24,speed:2,omega:2},
+    damped:{title:'Transient and steady-state response',duration:12,omega:2,c:2,parts:true},
+    'practice-free':{title:'Practice: no damping',duration:12,k:9,F:6,omega:3,compare:true},
+    'practice-damped':{title:'Practice: with damping',duration:12,k:9,F:6,omega:3,c:2,compare:true}
+  });
+  const fresh=()=>({...defaults});
+  const preset=id=>{const {title,...values}=presets[id]||presets.bounded;return {...fresh(),...values};};
+  const sinc=u=>Math.abs(u)<1e-4?1-u*u/6+u**4/120:Math.sin(u)/u;
+  const resonant=s=>s.c===0&&Math.abs(s.omega-Math.sqrt(s.k/s.m))<1e-12;
+  function coefficients(s){
+    const omega0=Math.sqrt(s.k/s.m),D=s.k-s.m*s.omega*s.omega,H=s.c*s.omega,den=D*D+H*H;
+    if(resonant(s))return {omega0,resonant:true,A:0,B:0,R:s.F===0?0:Infinity};
+    const A=s.F*D/den,B=s.F*H/den;
+    return {omega0,resonant:false,A,B,R:s.F/Math.hypot(D,H)};
+  }
+  function at(s,t){
+    const g=coefficients(s),w=s.omega,w0=g.omega0;
+    let x,v,xp,vp,xc,vc;
+    if(s.c===0){
+      // Product form avoids cancellation as omega approaches omega0.
+      const sum=w0+w,diff=w0-w,half=sum*t/2,q=diff*t/2;
+      const driven=s.F/s.m*t/sum*Math.sin(half)*sinc(q);
+      const drivenV=s.F/s.m/sum*(Math.sin(half)*Math.cos(q)+t*sum/2*Math.cos(half)*sinc(q));
+      const initial=Free.at(s,t);x=initial.x+driven;v=initial.v+drivenV;
+      xp=g.resonant?driven:g.A*Math.cos(w*t);
+      vp=g.resonant?drivenV:-w*g.A*Math.sin(w*t);
+      xc=x-xp;vc=v-vp;
+    }else{
+      xp=g.A*Math.cos(w*t)+g.B*Math.sin(w*t);
+      vp=w*(-g.A*Math.sin(w*t)+g.B*Math.cos(w*t));
+      const hom=Free.at({...s,x0:s.x0-g.A,v0:s.v0-w*g.B},t);
+      xc=hom.x;vc=hom.v;x=xc+xp;v=vc+vp;
+    }
+    if(t===0){x=s.x0;v=s.v0;}
+    const force=s.F*Math.cos(w*t);
+    return {t,x,v,xc,vc,xp,vp,force,a:(force-s.c*v-s.k*x)/s.m};
+  }
+  const envelopeAvailable=s=>s.c===0&&s.x0===0&&s.v0===0&&s.F>0;
+  function envelopeAt(s,t){
+    if(!envelopeAvailable(s))return null;
+    const w0=Math.sqrt(s.k/s.m);
+    return s.F/s.m*t/(w0+s.omega)*Math.abs(sinc((w0-s.omega)*t/2));
+  }
+  function sample(s,count=Math.max(721,Math.ceil(s.duration*40)+1)){
+    return Array.from({length:count},(_,i)=>at(s,s.duration*i/(count-1)));
+  }
+  function response(s,w,c=s.c){
+    const den=Math.hypot(s.k-s.m*w*w,c*w);
+    return s.F===0?0:den<1e-12?Infinity:s.F/den;
+  }
+  function peak(s,c=s.c){
+    if(c===0)return {omega:Math.sqrt(s.k/s.m),R:s.F===0?0:Infinity};
+    const omega=Math.sqrt(Math.max(0,s.k/s.m-c*c/(2*s.m*s.m)));
+    return {omega,R:response(s,omega,c)};
+  }
+  function matchingPreset(s){
+    return Object.keys(presets).find(id=>{const p=preset(id);return ['m','k','c','F','omega','x0','v0'].every(k=>Math.abs(s[k]-p[k])<1e-10);})||null;
+  }
+  function restore(raw){
+    const s=fresh();if(raw?.version!==1)return s;
+    // The UI keeps mass fixed; stiffness is selected by the lecture/practice preset.
+    if(raw.k===4||raw.k===9)s.k=raw.k;
+    const limits={c:[0,6,.05],F:[0,6,.1],omega:[.1,4,.01],x0:[-2,2,.1],v0:[-4,4,.1]};
+    for(const [key,[lo,hi,step]] of Object.entries(limits))if(typeof raw[key]==='number'&&Number.isFinite(raw[key]))s[key]=Number((Math.round(Math.max(lo,Math.min(hi,raw[key]))/step)*step).toFixed(6));
+    if([12,18,24,65,120].includes(raw.duration))s.duration=raw.duration;
+    if([1,2,4].includes(raw.speed))s.speed=raw.speed;
+    if(typeof raw.time==='number'&&Number.isFinite(raw.time))s.time=Math.max(0,Math.min(s.duration,raw.time));
+    for(const key of ['parts','envelope','compare'])if(typeof raw[key]==='boolean')s[key]=raw[key];
+    return s;
+  }
+  const M=Object.freeze({fresh,preset,presets,coefficients,resonant,at,sample,envelopeAvailable,envelopeAt,response,peak,matchingPreset,restore});
+  if(typeof module==='object'&&module.exports)module.exports=M;else root.ForcedVibrationModel=M;
+})(globalThis);
+</script>
+<script>
+(()=>{
+  const M=ForcedVibrationModel,root=document.getElementById('forced-lab'),el=id=>document.getElementById('rf-'+id),store='amath351-forced-vibrations-v1';
+  const colors={total:'var(--site-purple)',hom:'var(--site-teal)',part:'var(--site-orange)',envelope:'var(--site-muted)'};
+  let state=M.fresh(),playing=false,raf=0,last=0,chart,diagram,curves=[],widthKey='';
+  try{state=M.restore(JSON.parse(localStorage.getItem(store)));}catch(_){}
+  const requested=new URLSearchParams(location.search).get('example');if(Object.hasOwn(M.presets,requested))state=M.preset(requested);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const fmt=(n,d=2)=>Number.isFinite(n)?(Math.abs(n)<.5*10**(-d)?0:n).toFixed(d).replace('-','−'):'∞';
+  const plain=n=>String(Number(n.toFixed(2)));
+  const save=()=>{try{localStorage.setItem(store,JSON.stringify({version:1,...state}));}catch(_){}};
+  const announce=()=>{el('status').textContent=el('title').textContent+'. '+el('live').textContent;};
+  function legend(target,items){target.replaceChildren();for(const item of items){const span=document.createElement('span'),i=document.createElement('i');i.style.borderColor=item.color;if(item.dash)i.style.borderTopStyle='dashed';i.setAttribute('aria-hidden','true');span.append(i,document.createTextNode(item.label));target.append(span);}}
+  const plot=d3.select(el('plot')).append('svg').attr('role','img').attr('aria-label','Exact displacement against time. A moving point follows the spring mass.');
+  plot.append('title');plot.append('defs').append('clipPath').attr('id','rf-clip').append('rect');
+  plot.append('rect').attr('class','rf-frame');plot.append('g').attr('class','rf-grid');
+  const paths=plot.append('g').attr('clip-path','url(#rf-clip)');paths.append('line').attr('class','rf-zero');paths.append('g').attr('class','rf-curves');paths.append('line').attr('class','rf-guide');paths.append('circle').attr('r',5).attr('fill',colors.total);
+  plot.append('g').attr('class','rf-axis rf-x-axis');plot.append('g').attr('class','rf-axis rf-y-axis');
+  plot.append('text').attr('data-axis','x').attr('text-anchor','end').text('Time t (s)');plot.append('text').attr('data-axis','y').text('Displacement x (m)');
+  const hit=plot.append('rect').attr('fill','transparent').attr('aria-hidden','true');
+  const motion=d3.select(el('motion')).append('svg').attr('role','img').attr('aria-label','Spring mass with damping and an orange arrow for the external driving force.');motion.append('title');
+  for(const [name,tag,cls] of [['wall','path','structure'],['floor','path','structure'],['zero','line','guide'],['spring','path','spring'],['damper','path','damper'],['mass','rect','mass'],['force','path','force']])motion.append(tag).attr('data-part',name).attr('class','rf-'+cls);
+  for(const id of ['k','c','m','zero','force'])motion.append('text').attr('data-label',id).attr('text-anchor','middle');
+  const response=d3.select(el('response-plot')).append('svg').attr('role','img').attr('aria-label','Periodic response amplitude against driving frequency. Positive damping gives a finite peak.');response.append('title');
+  response.append('defs').append('clipPath').attr('id','rf-response-clip').append('rect');response.append('rect').attr('class','rf-frame');response.append('g').attr('class','rf-grid');
+  const responsePaths=response.append('g').attr('clip-path','url(#rf-response-clip)');responsePaths.append('g').attr('class','rf-response-curves');responsePaths.append('line').attr('class','rf-guide').attr('data-natural','');responsePaths.append('line').attr('stroke',colors.total).attr('opacity',.4).attr('data-selected','');responsePaths.append('circle').attr('r',5).attr('fill',colors.total);
+  response.append('g').attr('class','rf-axis rf-x-axis');response.append('g').attr('class','rf-axis rf-y-axis');response.append('text').attr('data-axis','x').attr('text-anchor','end').text('Driving frequency ω (rad/s)');response.append('text').attr('data-axis','y').text('Periodic amplitude R (m)');response.append('text').attr('data-natural-label','').text('ω₀');
+  const responseHit=response.append('rect').attr('fill','transparent').attr('aria-hidden','true');
+  function updatePlayback(){el('play').textContent=reduced.matches?'Advance 0.5 s':playing?'Pause motion':'Play motion';el('play').setAttribute('aria-pressed',String(playing));}
+  function pause(){playing=false;cancelAnimationFrame(raf);raf=0;last=0;updatePlayback();}
+  function renderTime(){
+    const p=M.at(state,state.time);el('time').value=state.time;el('time-out').textContent=fmt(state.time)+' s';
+    el('live').textContent='x = '+fmt(p.x)+' m · x′ = '+fmt(p.v)+' m/s · F(t) = '+fmt(p.force)+' N';
+    if(!chart||!diagram)return;
+    paths.select('.rf-guide').attr('x1',chart.x(state.time)).attr('x2',chart.x(state.time)).attr('y1',chart.top).attr('y2',chart.bottom);
+    paths.select('circle').attr('cx',chart.x(state.time)).attr('cy',chart.y(p.x));
+    const {w,base,unit}=diagram,pos=base+unit*p.x,left=pos-22,wall=25,start=wall+10,end=left-10,mid=(wall+left)/2;
+    motion.select('[data-part="zero"]').attr('x1',base).attr('x2',base).attr('y1',32).attr('y2',158);
+    motion.select('[data-part="mass"]').attr('x',left).attr('y',62).attr('width',44).attr('height',52).attr('rx',4);
+    const coil=d3.range(17).map(i=>[start+(end-start)*i/16,72+(i===0||i===16?0:i%2?8:-8)]);
+    motion.select('[data-part="spring"]').attr('d','M'+wall+',72L'+start+',72'+coil.map(p=>'L'+p).join('')+'L'+left+',72');
+    motion.select('[data-part="damper"]').attr('d','M'+wall+',104H'+(mid-11)+'M'+(mid+11)+',96H'+(mid-11)+'V112H'+(mid+11)+'M'+mid+',98V110M'+mid+',104H'+left).attr('opacity',state.c===0?.2:1);
+    const len=state.F===0?0:38*p.force/state.F,tip=pos+len;
+    motion.select('[data-part="force"]').attr('d',Math.abs(len)<.05?'':'M'+pos+',40H'+tip+'l'+(-Math.sign(len)*6)+',-4M'+tip+',40l'+(-Math.sign(len)*6)+',4');
+    const label=(id,txt,x,y)=>motion.select('[data-label="'+id+'"]').text(txt).attr('x',x).attr('y',y);
+    label('k','k = '+plain(state.k),mid,52);label('c','c = '+plain(state.c),mid,139);label('m','m',pos,94);label('zero','x = 0',base,177);label('force','F(t)',pos,23);
+    motion.select('title').text('At '+fmt(state.time)+' seconds: displacement '+fmt(p.x)+' meters, external force '+fmt(p.force)+' newtons.');
+  }
+  function drawResponse(){
+    const w=el('response-plot').clientWidth,h=w<500?300:330,b={left:66,right:w-18,top:34,bottom:h-50},w0=Math.sqrt(state.k/state.m);
+    const refs=[{c:.5,color:colors.total,dash:null},{c:1,color:colors.hom,dash:'7 4'},{c:2,color:colors.part,dash:'9 3 2 3'},{c:4,color:colors.envelope,dash:'2 4'}];
+    const selected=refs.find(r=>Math.abs(r.c-state.c)<1e-10);if(state.c>0&&!selected)refs.push({c:state.c,color:'var(--site-ink)',dash:null});
+    const max=Math.max(.15,...refs.map(r=>M.peak(state,r.c).R))*1.14;
+    const x=d3.scaleLinear().domain([0,4.2]).range([b.left,b.right]),y=d3.scaleLinear().domain([0,max]).range([b.bottom,b.top]);
+    response.attr('viewBox','0 0 '+w+' '+h).attr('height',h);
+    response.selectAll('.rf-frame,clipPath rect').attr('x',b.left).attr('y',b.top).attr('width',b.right-b.left).attr('height',b.bottom-b.top);
+    response.select('.rf-grid').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(-(b.right-b.left)).tickFormat(''));
+    response.select('.rf-x-axis').attr('transform','translate(0,'+b.bottom+')').call(d3.axisBottom(x).ticks(w<500?4:8).tickSize(0).tickPadding(8));
+    response.select('.rf-y-axis').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(8));
+    response.select('[data-axis="x"]').attr('x',b.right).attr('y',h-4);response.select('[data-axis="y"]').attr('x',3).attr('y',15);
+    const line=d3.line().x(p=>x(p.w)).y(p=>y(p.R));
+    responsePaths.select('.rf-response-curves').selectAll('path').data(refs,r=>r.c).join('path').attr('class','rf-line').attr('stroke',r=>r.color).attr('stroke-dasharray',r=>r.dash).attr('stroke-width',r=>r.c===state.c?3:1.8).attr('d',r=>line(d3.range(0,4.2001,.004).map(w=>({w,R:M.response(state,w,r.c)}))));
+    responsePaths.select('[data-natural]').attr('x1',x(w0)).attr('x2',x(w0)).attr('y1',b.top).attr('y2',b.bottom);
+    responsePaths.select('[data-selected]').attr('x1',x(state.omega)).attr('x2',x(state.omega)).attr('y1',b.top).attr('y2',b.bottom);
+    response.select('[data-natural-label]').attr('x',x(w0)+7).attr('y',b.top+14);
+    const R=M.response(state,state.omega);responsePaths.select('circle').attr('display',state.c>0?null:'none').attr('cx',x(state.omega)).attr('cy',y(Number.isFinite(R)?R:0));
+    legend(el('response-legend'),refs.map(r=>({label:'c = '+plain(r.c)+(r.c===state.c?' · selected':''),color:r.color,dash:r.dash})));
+    el('response-readout').textContent=M.resonant(state)&&state.F>0?'At ω = ω₀ with c = 0: no periodic particular solution. The time-domain envelope grows.':'At ω = '+fmt(state.omega)+': periodic-component amplitude R = '+fmt(R)+' m.';
+    const peak=M.peak(state);
+    el('response-note').textContent=state.F===0?'With no driving force, the forced component is zero.':state.c===0?'Only positive-damping curves are drawn. The undamped amplitude formula is singular at the dashed natural-frequency line.':peak.omega===0?'At this damping level, amplitude decreases from its value at ω = 0; there is no positive-frequency resonance peak.':'For the selected damping, the peak is at ω ≈ '+fmt(peak.omega)+' rad/s with R ≈ '+fmt(peak.R)+' m, below the natural frequency ω₀ = '+fmt(w0)+'.';
+    responseHit.attr('x',b.left).attr('y',b.top).attr('width',b.right-b.left).attr('height',b.bottom-b.top).on('click',event=>{state.omega=Math.max(.1,Math.min(4,Math.round(x.invert(d3.pointer(event,response.node())[0])*100)/100));changed();});
+    response.select('title').text('Frequency response for positive damping, with natural frequency '+fmt(w0)+' radians per second.');
+  }
+  function draw(){
+    const samples=M.sample(state),w=el('plot').clientWidth,h=w<450?330:365,b={left:65,right:w-16,top:30,bottom:h-48};
+    curves=[{id:'total',label:'Total x',color:colors.total,data:samples,key:'x'}];
+    if(state.parts)curves.push({id:'xc',label:state.c>0?'Transient x_c':'Homogeneous x_c',color:colors.hom,dash:'2 4',data:samples,key:'xc'},{id:'xp',label:state.c>0?'Steady-state x_p':'Particular x_p',color:colors.part,dash:'8 4',data:samples,key:'xp'});
+    if(state.compare)for(const c of [0,2])if(Math.abs(state.c-c)>1e-10)curves.push({id:'compare-'+c,label:'Total with c = '+c,color:c===0?'var(--site-ink)':colors.hom,dash:'6 4',data:M.sample({...state,c}),key:'x'});
+    if(state.envelope&&M.envelopeAvailable(state))for(const sign of [1,-1])curves.push({id:'envelope-'+sign,label:'Amplitude envelope',color:colors.envelope,dash:'5 4',data:samples.map(p=>({t:p.t,x:sign*M.envelopeAt(state,p.t)})),key:'x'});
+    let R=.2;for(const curve of curves)for(const p of curve.data)R=Math.max(R,Math.abs(p[curve.key]));R*=1.12;
+    const x=d3.scaleLinear().domain([0,state.duration]).range([b.left,b.right]),y=d3.scaleLinear().domain([-R,R]).range([b.bottom,b.top]);chart={x,y,...b};
+    plot.attr('viewBox','0 0 '+w+' '+h).attr('height',h);plot.selectAll('.rf-frame,clipPath rect').attr('x',b.left).attr('y',b.top).attr('width',b.right-b.left).attr('height',b.bottom-b.top);
+    plot.select('.rf-grid').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(-(b.right-b.left)).tickFormat(''));
+    plot.select('.rf-x-axis').attr('transform','translate(0,'+b.bottom+')').call(d3.axisBottom(x).ticks(w<450?4:6).tickSize(0).tickPadding(8));plot.select('.rf-y-axis').attr('transform','translate('+b.left+',0)').call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(8));
+    plot.select('[data-axis="x"]').attr('x',b.right).attr('y',h-4);plot.select('[data-axis="y"]').attr('x',3).attr('y',14);
+    paths.select('.rf-zero').attr('x1',b.left).attr('x2',b.right).attr('y1',y(0)).attr('y2',y(0));
+    paths.select('.rf-curves').selectAll('path').data(curves,c=>c.id).join('path').attr('class',c=>'rf-line'+(c.id==='total'?' rf-total':'')).attr('stroke',c=>c.color).attr('stroke-dasharray',c=>c.dash||null).attr('d',c=>d3.line().x(p=>x(p.t)).y(p=>y(p[c.key]))(c.data)).sort((a,b)=>(a.id==='total')-(b.id==='total'));
+    legend(el('legend'),curves.filter(c=>c.id!=='envelope--1'));
+    hit.attr('x',b.left).attr('y',b.top).attr('width',b.right-b.left).attr('height',b.bottom-b.top);
+    const mw=el('motion').clientWidth;let spatial=.2;for(const p of samples)spatial=Math.max(spatial,Math.abs(p.x));diagram={w:mw,base:.61*mw,unit:.22*mw/(spatial*1.04)};motion.attr('viewBox','0 0 '+mw+' 192').attr('height',192);
+    motion.select('[data-part="wall"]').attr('d','M25,52V124'+d3.range(6).map(i=>'M25,'+(54+i*13)+'l-8,6').join(''));motion.select('[data-part="floor"]').attr('d','M25,116H'+(mw-8));
+    drawResponse();renderTime();plot.select('title').text(el('title').textContent+'. Exact displacement over '+state.duration+' seconds.');
+  }
+  function render(){
+    const g=M.coefficients(state),id=M.matchingPreset(state);
+    for(const key of ['omega','c','F','x0','v0'])el(key).value=state[key];
+    el('omega-out').textContent=fmt(state.omega)+' rad/s';el('c-out').textContent=fmt(state.c)+' kg/s';el('F-out').textContent=fmt(state.F,1)+' N';el('x0-out').textContent=fmt(state.x0,1)+' m';el('v0-out').textContent=fmt(state.v0,1)+' m/s';
+    el('time').max=state.duration;el('duration').value=state.duration;el('speed').value=state.speed;
+    el('title').textContent=id?M.presets[id].title:'Explore a different driving force';
+    el('equation').textContent='x″'+(state.c===0?'':' + '+plain(state.c)+'x′')+' + '+plain(state.k)+'x = '+(state.F===0?'0':(state.F===1?'':plain(state.F))+'cos('+(state.omega===1?'':plain(state.omega))+'t)');
+    el('initial').textContent='m = 1 kg · k = '+plain(state.k)+' N/m · x(0) = '+fmt(state.x0,1)+' m · x′(0) = '+fmt(state.v0,1)+' m/s';el('natural').textContent='Natural frequency ω₀ = '+fmt(g.omega0)+' rad/s · ω/ω₀ = '+fmt(state.omega/g.omega0);
+    el('observation').textContent=state.F===0?(state.c>0?'No driving force: the free motion decays toward equilibrium.':'No driving force: only free motion remains.'):g.resonant?'The undamped driving frequency matches ω₀. The envelope grows linearly with time; extending the time window reveals larger peaks.':state.c>0?'Damping makes the homogeneous part decay. The response approaches a bounded periodic motion, even when ω = ω₀.':Math.abs(state.omega-g.omega0)<.4?'Nearby frequencies produce beats: a slow envelope around fast oscillations. At this fixed nonresonant frequency, the motion remains bounded.':'The two frequencies differ. Their combination stays bounded; the homogeneous component does not decay without damping.';
+    for(const key of ['parts','compare'])el(key).checked=state[key];el('envelope').checked=state.envelope&&M.envelopeAvailable(state);el('envelope').disabled=!M.envelopeAvailable(state);
+    el('envelope-note').textContent=M.envelopeAvailable(state)?g.resonant?'Envelope: ±[F₀/(2mω₀)] t. This grows over time; it is not a finite-time blow-up.':'The dashed envelope bounds the zero-initial-value response. Near resonance, it varies slowly.':'The beats/resonance envelope is available with c = 0 and both initial values zero. The complete solution is still shown.';
+    for(const b of root.querySelectorAll('[data-preset]'))b.setAttribute('aria-pressed',String(b.dataset.preset===id));updatePlayback();draw();
+  }
+  function changed(){pause();state.time=0;render();announce();save();history.replaceState(null,'',location.pathname+'#forced-lab');}
+  for(const b of root.querySelectorAll('[data-preset]'))b.addEventListener('click',()=>{pause();state=M.preset(b.dataset.preset);render();announce();save();history.replaceState(null,'','?example='+b.dataset.preset+'#forced-lab');});
+  for(const key of ['omega','c','F','x0','v0'])el(key).addEventListener('input',e=>{state[key]=Number(e.target.value);changed();});
+  el('match').addEventListener('click',()=>{state.omega=Math.sqrt(state.k/state.m);changed();});
+  for(const key of ['parts','envelope','compare'])el(key).addEventListener('change',e=>{pause();state[key]=e.target.checked;render();announce();save();});
+  el('duration').addEventListener('change',e=>{state.duration=Number(e.target.value);changed();});el('speed').addEventListener('change',e=>{pause();state.speed=Number(e.target.value);updatePlayback();save();});
+  el('time').addEventListener('input',e=>{pause();state.time=Number(e.target.value);renderTime();announce();save();});
+  hit.on('click',event=>{pause();state.time=Math.max(0,Math.min(state.duration,chart.x.invert(d3.pointer(event,plot.node())[0])));renderTime();announce();save();});
+  el('rewind').addEventListener('click',()=>{pause();state.time=0;renderTime();announce();save();});
+  function tick(now){if(!playing)return;if(last)state.time=Math.min(state.duration,state.time+state.speed*Math.min(.1,(now-last)/1000));last=now;renderTime();if(state.time>=state.duration){pause();announce();save();}else raf=requestAnimationFrame(tick);}
+  el('play').addEventListener('click',()=>{if(reduced.matches){state.time=state.time>=state.duration?0:Math.min(state.duration,state.time+.5);renderTime();announce();save();return;}if(playing){pause();save();return;}if(state.time>=state.duration)state.time=0;playing=true;last=0;updatePlayback();raf=requestAnimationFrame(tick);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();save();}});reduced.addEventListener('change',()=>{pause();save();});
+  new ResizeObserver(()=>{const key=el('plot').clientWidth+','+el('motion').clientWidth+','+el('response-plot').clientWidth;if(widthKey!==key){widthKey=key;draw();}}).observe(document.getElementById('main-content'));
+  render();
+})();
+</script>
+</main>
+<nav class="site-example-nav" aria-label="Example navigation"><a href="../undetermined-coefficients/"><small>Previous example</small>← What does multiplying by x change?</a><a class="site-all-examples" href="../">All chapter examples</a><span></span></nav>
+    <footer class="site-footer"><span>University of Washington · Autumn 2026</span><div><a href="https://shzhang3.github.io/#teaching">Shiheng Zhang · Teaching</a><a href="https://github.com/shzhang3/amath351-lab" target="_blank" rel="noopener">Contribute on GitHub ↗</a></div></footer>
+  </div>
+
+</body>
+</html>

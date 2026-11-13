@@ -18,10 +18,11 @@
     </header>
 <nav class="site-breadcrumbs" aria-label="Breadcrumb"><a href="../../../">All chapters</a><span aria-hidden="true">/</span><a href="../">Chapter 02: Higher-order linear equations</a><span aria-hidden="true">/</span><span aria-current="page">Set an oscillator in motion</span></nav>
     <main id="main-content" tabindex="-1"><noscript>Enable JavaScript to use the interactive plots. Explanations and navigation remain available.</noscript><section class="lab-intro">
-  <div class="site-kicker">Section 3.4 · Free mechanical vibrations</div>
+  <div class="site-kicker">Sections 3.4 / 3.6 · Free mechanical vibrations</div>
   <h1>Set an oscillator in motion</h1>
   <p class="lab-math">m x″ + c x′ + k x = 0</p>
   <p>Pull the mass away from equilibrium and release it. Change the resistance and watch the same motion appear as a displacement curve. What changes when the spring is stiffer, or the mass is heavier?</p>
+  <p class="lab-small">For the combined lecture, compare c = 0, 1, 4, and 8 with m = 1 and k = 4. Then <a href="../resonance/#forced-lab">add an external driving force</a> in Section 3.6.</p>
 </section>
 <div id="vib-lab" class="lab-interactive">
   <div class="lab-row vb-presets" role="group" aria-label="Choose a damping level">
@@ -177,6 +178,7 @@
   const M=VibrationModel,root=document.getElementById('vib-lab'),el=id=>root.querySelector('#vb-'+id),store='amath351-vibrations-v1';
   let state=M.fresh(),playing=false,raf=0,last=0,widthKey='';
   try{state=M.restore(JSON.parse(localStorage.getItem(store)));}catch(_){}
+  if(new URLSearchParams(location.search).get('lecture')==='3.6')state={...M.fresh(),compare:true};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const cases=[{id:'undamped',name:'No damping',color:'var(--site-muted)'},{id:'underdamped',name:'Underdamped',color:'var(--site-teal)'},{id:'critical',name:'Critical',color:'var(--site-purple)'},{id:'overdamped',name:'Overdamped',color:'var(--site-orange)'}];
   const fmt=(n,d=2)=>(Math.abs(n)<.5*10**(-d)?0:n).toFixed(d).replace('-','−');
