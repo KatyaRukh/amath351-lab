@@ -840,8 +840,14 @@ if (typeof module === "undefined") {
   }
 
   // ── Spring shape ─────────────────────────────────────────────────────
-  const EQ_X = 230;   // equilibrium x-position of mass centre in SVG coords
-  const SCALE = 180;  // pixels per unit displacement
+  const EQ_X = 230;        // equilibrium x-position of mass centre in SVG coords
+  const MAX_PIXELS = 155;  // max pixels the mass can move left or right of EQ_X
+
+  function getScale() {
+    if (!solution) return 180;
+    const maxDisp = Math.max(...solution.y.map(Math.abs));
+    return maxDisp > 0 ? MAX_PIXELS / maxDisp : 180;
+  }
 
   function springPoints(massX) {
     // coil spring from x=12 to massX
@@ -858,8 +864,7 @@ if (typeof module === "undefined") {
   }
 
   function updateAnimation(disp) {
-    const massX = EQ_X + SCALE * disp;
-    const clampedX = Math.max(80, Math.min(430, massX));
+    const clampedX = EQ_X + getScale() * disp;
     // mass block: centred at clampedX
     const rectX = clampedX - 30;
     massRect.setAttribute("x", rectX);
