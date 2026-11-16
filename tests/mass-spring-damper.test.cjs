@@ -4,6 +4,9 @@
 
 const { test } = require("node:test");
 const assert   = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
 const { solve, classify, exactSolution, ode, rk4Step } =
   require("../src/mass-spring-damper-model.cjs");
 
@@ -105,4 +108,33 @@ test("solve: throws for k <= 0", () => {
 });
 test("solve: throws for c < 0", () => {
   assert.throws(() => solve({ m: 1, c: -1, k: 1, y0: 0, yp0: 0 }), /c must be non-negative/);
+});
+
+test("the shared model loads in a browser without CommonJS globals", () => {
+  const context = vm.createContext({});
+  const source = fs.readFileSync(path.join(__dirname, "../src/mass-spring-damper-model.cjs"), "utf8");
+  vm.runInContext(source, context);
+  const params = { m: 1, c: 4, k: 4, y0: 1, yp0: 0 };
+  const browser = context.Amath351MassSpring;
+  assert.equal(browser.classify(1, 4, 4), "critical");
+  assert.deepEqual(Array.from(browser.solve(params).y), solve(params).y);
+});
+
+test("the page embeds the shared model once and generates valid browser JavaScript", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../src/mass-spring-damper.html"), "utf8");
+  const model = fs.readFileSync(path.join(__dirname, "../src/mass-spring-damper-model.cjs"), "utf8");
+  assert.equal(source.split("{{MODEL}}").length - 1, 1);
+  const scripts = [...source.replaceAll("{{MODEL}}", model).matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 1);
+  assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
+  assert.match(source, /const \{ solve, classify \} = globalThis\.Amath351MassSpring/);
+});
+
+test("the damping control includes the overdamped preset", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../src/mass-spring-damper.html"), "utf8");
+  const input = source.match(/<input\b[^>]*id="ctrl-c"[^>]*>/)[0];
+  const max = Number(input.match(/\bmax="([\d.]+)"/)[1]);
+  const preset = Number(source.match(/overdamped:\s*\{[^}]*\bc:\s*([\d.]+)/)[1]);
+  assert.ok(preset <= max);
+  assert.equal(Number(input.match(/aria-valuemax="([\d.]+)"/)[1]), max);
 });

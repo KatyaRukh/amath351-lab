@@ -1,5 +1,5 @@
 <!-- src/mass-spring-damper.html -->
-<!-- Student lab: Mass-Spring-Damper via numerical ODE (RK4 / ode45 equivalent) -->
+<!-- Student lab: Mass-Spring-Damper via numerical ODE (RK4) -->
 <!-- Drop into src/, add an entry to src/student-labs.json, then run build.py    -->
 
 <article class="lab-page" aria-labelledby="lab-title">
@@ -129,8 +129,8 @@
     <h2 id="reduction-heading">Reducing to a First-Order System</h2>
 
     <p>
-      Numerical solvers can only step through <em>first-order</em> ODEs —
-      equations where the highest derivative is y&prime;, not y&Prime;.
+      The RK4 method used here, like MATLAB's ode45, advances a
+      <em>first-order</em> system of ODEs.
       To handle our second-order equation we introduce a new variable:
     </p>
     <div class="lab-eq">
@@ -377,8 +377,8 @@
           </label>
           <label class="lab-param">
             <span>c (damping)</span>
-            <input type="range" id="ctrl-c" min="0" max="6" step="0.1" value="1"
-                   aria-valuemin="0" aria-valuemax="6">
+            <input type="range" id="ctrl-c" min="0" max="10" step="0.1" value="1"
+                   aria-valuemin="0" aria-valuemax="10">
             <output id="val-c" class="lab-param-val">1.0</output>
           </label>
           <label class="lab-param">
@@ -658,55 +658,12 @@
 
 <!-- ─── Script (embedded model is injected here by build.py) ─────────────── -->
 <script>
-// ---- Embedded model (build.py replaces {{MODEL}} with the .cjs source) ----
-// In development without the build step, the model is defined inline below.
-// {{MODEL}}
-
-// If running standalone (model not embedded), provide a minimal inline version:
-if (typeof module === "undefined") {
-  // Browser environment: define the model functions directly
-  window._msd = window._msd || {};
-}
+{{MODEL}}
 
 (function () {
   "use strict";
 
-  // ── RK4 solver (mirrors mass-spring-damper-model.cjs) ──────────────────
-  function ode(t, y, m, c, k) {
-    return [y[1], (-c * y[1] - k * y[0]) / m];
-  }
-
-  function rk4Step(t, y, h, m, c, k) {
-    const f   = (tt, yy) => ode(tt, yy, m, c, k);
-    const add = (a, b, s) => [a[0] + s * b[0], a[1] + s * b[1]];
-    const k1  = f(t,         y);
-    const k2  = f(t + h / 2, add(y, k1, h / 2));
-    const k3  = f(t + h / 2, add(y, k2, h / 2));
-    const k4  = f(t + h,     add(y, k3, h));
-    return [
-      y[0] + (h / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
-      y[1] + (h / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])
-    ];
-  }
-
-  function solve(m, c, k, y0, yp0) {
-    const tEnd = 50, steps = 1000, h = tEnd / steps;
-    const t = [], y = [], yp = [];
-    let state = [y0, yp0];
-    for (let i = 0; i <= steps; i++) {
-      const ti = i * h;
-      t.push(ti); y.push(state[0]); yp.push(state[1]);
-      if (i < steps) state = rk4Step(ti, state, h, m, c, k);
-    }
-    return { t, y, yp };
-  }
-
-  function classify(m, c, k) {
-    if (c === 0) return "undamped";
-    const disc = c * c - 4 * m * k;
-    if (Math.abs(disc) < 1e-9) return "critical";
-    return disc > 0 ? "overdamped" : "underdamped";
-  }
+  const { solve, classify } = globalThis.Amath351MassSpring;
 
   // ── UI state ──────────────────────────────────────────────────────────
   const presets = {
@@ -886,7 +843,7 @@ if (typeof module === "undefined") {
     valY0.value  = y0.toFixed(2);
     valYp0.value = yp0.toFixed(2);
 
-    solution = solve(m, c, k, y0, yp0);
+    solution = solve({ m, c, k, y0, yp0 });
 
     const type   = classify(m, c, k);
     const omega0 = Math.sqrt(k / m);

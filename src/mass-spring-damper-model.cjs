@@ -1,3 +1,4 @@
+(function (root) {
 "use strict";
 // mass-spring-damper-model.cjs
 // Numerical model for the second-order mass-spring-damper ODE:
@@ -111,4 +112,7 @@ function exactSolution(m, c, k, y0, yp0, tArr) {
   return tArr.map(t => A * Math.exp(r1 * t) + B * Math.exp(r2 * t));
 }
 
-module.exports = { solve, classify, exactSolution, ode, rk4Step };
+const api = Object.freeze({ solve, classify, exactSolution, ode, rk4Step });
+if (typeof module === "object" && module.exports) module.exports = api;
+else root.Amath351MassSpring = api;
+})(globalThis);
