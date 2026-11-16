@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Rewrite m y&#x27;&#x27; + c y&#x27; + k y = 0 as a first-order system and integrate it with RK4.">
+  <meta name="theme-color" content="#624298">
+  <title>Mass-Spring-Damper: Numerical ODE · AMATH 351 Lab</title>
+  <link rel="canonical" href="https://shzhang3.github.io/amath351-lab/student-labs/mass-spring-damper/">
+  <link rel="stylesheet" href="../../assets/lab.css">
+</head>
+<body>
+  <a class="site-skip" href="#main-content">Skip to content</a>
+  <div class="site-wrap">
+    <header class="site-header">
+      <a class="site-brand" href="../../"><span class="site-brand-mark" aria-hidden="true">y′</span>AMATH 351 / Lab</a>
+      <nav aria-label="Main navigation"><a href="../../">Chapters</a><a href="https://shzhang3.github.io/#teaching">Teaching</a><a href="https://github.com/shzhang3/amath351-lab" target="_blank" rel="noopener">GitHub ↗</a></nav>
+    </header>
+<nav class="site-breadcrumbs" aria-label="Breadcrumb"><a href="../../">All chapters</a><span aria-hidden="true">/</span><a href="../../#student-labs">Student Showcase</a><span aria-hidden="true">/</span><span aria-current="page">Mass-Spring-Damper: Numerical ODE</span></nav>
+    <main id="main-content" tabindex="-1"><noscript>Enable JavaScript to use the interactive plots. Explanations and navigation remain available.</noscript><!-- src/mass-spring-damper.html -->
+<!-- Student lab: Mass-Spring-Damper via numerical ODE (RK4) -->
+<!-- Drop into src/, add an entry to src/student-labs.json, then run build.py    -->
+
+<article class="lab-page" aria-labelledby="lab-title">
+
+  <!-- ─── Header ─────────────────────────────────────────────────────────── -->
+  <header class="lab-header">
+    <h1 id="lab-title">Mass-Spring-Damper: Solving a Second-Order ODE Numerically</h1>
+    <p class="lab-subtitle">
+      Rewrite <em>m&thinsp;y&Prime; + c&thinsp;y&prime; + k&thinsp;y = 0</em> as a first-order
+      system, then step through it numerically to build the solution one small
+      increment at a time.
+    </p>
+  </header>
+
+  <!-- ─── Background ───────────────────────────────────────────────────────── -->
+  <section class="lab-section" aria-labelledby="bg-heading">
+    <h2 id="bg-heading">The System</h2>
+
+    <figure class="lab-diagram" aria-label="Mass-spring-damper schematic">
+      <svg viewBox="0 0 420 190" role="img"
+           aria-label="A mass m connected to a fixed wall by a spring (top) and damper (bottom) in parallel, free on the right side">
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6"
+                  refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="var(--color-fg,#222)"/>
+          </marker>
+        </defs>
+
+        <!-- Fixed wall (left only) -->
+        <rect x="0" y="10" width="14" height="170" fill="var(--color-muted,#888)"/>
+        <line x1="14" y1="12"  x2="0" y2="30"  stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="38"  x2="0" y2="56"  stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="64"  x2="0" y2="82"  stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="90"  x2="0" y2="108" stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="116" x2="0" y2="134" stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="142" x2="0" y2="160" stroke="var(--color-muted,#888)" stroke-width="2"/>
+        <line x1="14" y1="168" x2="0" y2="180" stroke="var(--color-muted,#888)" stroke-width="2"/>
+
+        <!-- Short horizontal lead from wall, then split into two rails -->
+        <!-- Top rail → spring -->
+        <line x1="14" y1="58" x2="40" y2="58"
+              stroke="var(--color-fg,#444)" stroke-width="2"/>
+        <!-- Bottom rail → damper -->
+        <line x1="14" y1="122" x2="40" y2="122"
+              stroke="var(--color-fg,#444)" stroke-width="2"/>
+        <!-- Vertical connector on wall side -->
+        <line x1="40" y1="58" x2="40" y2="122"
+              stroke="var(--color-fg,#444)" stroke-width="2"/>
+
+        <!-- ── Spring (top path) ── -->
+        <text x="148" y="22" text-anchor="middle" font-size="13"
+              fill="var(--color-accent,#624298)" font-style="italic">k</text>
+        <!-- coil: wall-side lead + 7 zigzag teeth + mass-side lead -->
+        <polyline
+          points="40,58 60,58 68,38 84,78 100,38 116,78 132,38 148,78 164,38 180,78 188,58 230,58"
+          fill="none" stroke="var(--color-accent,#624298)" stroke-width="2.5"
+          stroke-linejoin="round"/>
+
+        <!-- ── Damper (bottom path) ── -->
+        <text x="148" y="175" text-anchor="middle" font-size="13"
+              fill="var(--color-accent2,#2a7ae2)" font-style="italic">c</text>
+        <!-- rod from wall to cylinder -->
+        <line x1="40" y1="122" x2="100" y2="122"
+              stroke="var(--color-accent2,#2a7ae2)" stroke-width="2.5"/>
+        <!-- cylinder body -->
+        <rect x="100" y="108" width="80" height="28" rx="3"
+              fill="var(--color-surface,#f0f0f8)"
+              stroke="var(--color-accent2,#2a7ae2)" stroke-width="2.5"/>
+        <!-- piston plate inside cylinder -->
+        <line x1="155" y1="109" x2="155" y2="135"
+              stroke="var(--color-accent2,#2a7ae2)" stroke-width="4"/>
+        <!-- rod from cylinder to mass -->
+        <line x1="180" y1="122" x2="230" y2="122"
+              stroke="var(--color-accent2,#2a7ae2)" stroke-width="2.5"/>
+
+        <!-- Vertical connector on mass side -->
+        <line x1="230" y1="58" x2="230" y2="122"
+              stroke="var(--color-fg,#444)" stroke-width="2"/>
+        <!-- Short lead into mass -->
+        <line x1="230" y1="90" x2="250" y2="90"
+              stroke="var(--color-fg,#444)" stroke-width="2"/>
+
+        <!-- ── Mass block ── -->
+        <rect x="250" y="58" width="80" height="64" rx="6"
+              fill="var(--color-surface,#f4f4f8)"
+              stroke="var(--color-fg,#222)" stroke-width="2.5"/>
+        <text x="290" y="97" text-anchor="middle" font-size="22"
+              font-weight="bold" fill="var(--color-fg,#222)">m</text>
+
+        <!-- ── Displacement arrow ── -->
+        <!-- equilibrium dashed line -->
+        <line x1="290" y1="130" x2="290" y2="150"
+              stroke="var(--color-muted,#bbb)" stroke-width="1" stroke-dasharray="3,3"/>
+        <!-- y arrow -->
+        <line x1="295" y1="140" x2="345" y2="140"
+              stroke="var(--color-fg,#222)" stroke-width="1.8"
+              marker-end="url(#arrowhead)"/>
+        <text x="316" y="157" text-anchor="middle" font-size="13"
+              fill="var(--color-fg,#222)" font-style="italic">y</text>
+
+        <!-- ── Force labels ── -->
+        <!-- spring force label -->
+        <text x="148" y="92" text-anchor="middle" font-size="10"
+              fill="var(--color-accent,#624298)">f = −ky</text>
+        <!-- damper force label -->
+        <text x="148" y="150" text-anchor="middle" font-size="10"
+              fill="var(--color-accent2,#2a7ae2)">f = −cy′</text>
+      </svg>
+      <figcaption>
+        The spring (top) and damper (bottom) are connected <em>in parallel</em>
+        between the fixed wall and the mass. When the mass moves right by y, the
+        spring pulls it back with force −ky; the damper resists its velocity with
+        force −cy′.
+      </figcaption>
+    </figure>
+
+    <p>
+      Applying Newton's second law (F = ma) gives:
+    </p>
+    <div class="lab-eq" aria-label="m y double-prime plus c y prime plus k y equals zero">
+      m y&Prime; + c y&prime; + k y = 0
+    </div>
+  </section>
+
+  <!-- ─── Reduction to first-order system ───────────────────────────────── -->
+  <section class="lab-section" aria-labelledby="reduction-heading">
+    <h2 id="reduction-heading">Reducing to a First-Order System</h2>
+
+    <p>
+      The RK4 method used here, like MATLAB's ode45, advances a
+      <em>first-order</em> system of ODEs.
+      To handle our second-order equation we introduce a new variable:
+    </p>
+    <div class="lab-eq">
+      g = y&prime;
+    </div>
+    <p>
+      Then g&prime; = y&Prime;, and substituting into the ODE gives us two
+      coupled first-order equations:
+    </p>
+    <div class="lab-system">
+      <div class="lab-eq">y&prime; = g</div>
+      <div class="lab-eq">g&prime; = &minus;(c&thinsp;g + k&thinsp;y) / m</div>
+    </div>
+    <p>
+      In vector form with <strong>u</strong> = [y, g]<sup>T</sup>:
+    </p>
+    <div class="lab-eq">
+      <strong>u</strong>&prime; =
+      <span class="lab-matrix">
+        <span class="lab-bracket">[</span>
+        <span class="lab-col">
+          <span>0</span>
+          <span>&minus;k/m</span>
+        </span>
+        <span class="lab-col">
+          <span>1</span>
+          <span>&minus;c/m</span>
+        </span>
+        <span class="lab-bracket">]</span>
+      </span>
+      <strong>u</strong>
+    </div>
+    <p>
+      We now have two quantities to track — position y and velocity g — and two
+      rules saying how each changes. A numerical solver can march both forward
+      through time together.
+    </p>
+  </section>
+
+  <!-- ─── How the solver works ─────────────────────────────────────────────── -->
+  <section class="lab-section" aria-labelledby="solver-heading">
+    <h2 id="solver-heading">How the Solver Works</h2>
+
+    <div class="lab-callout">
+      <strong>What is ode45?</strong>
+      <p>
+        <em>ode45</em> is the name of a popular numerical ODE solver found in
+        MATLAB and many other tools. The name breaks down like this:
+        <strong>ode</strong> = ordinary differential equation,
+        <strong>4</strong> and <strong>5</strong> = it uses both a 4th-order
+        and a 5th-order approximation at each step so it can automatically
+        judge how accurate its answer is.
+        You don't need MATLAB to understand it — it is just one specific
+        algorithm for the idea described below.
+      </p>
+    </div>
+
+    <h3>The core idea: small steps in time</h3>
+    <p>
+      We can't solve most ODEs with a formula, but we <em>can</em> approximate
+      a solution by taking many tiny steps forward in time. At each step we
+      know the current position and velocity, so we can calculate the
+      acceleration from Newton's law — and use that to predict where the mass
+      will be a moment later.
+    </p>
+
+    <figure class="lab-stepper" aria-label="Diagram of one numerical step">
+      <svg viewBox="0 0 500 110" role="img" aria-label="One step from t to t+h">
+        <!-- timeline -->
+        <line x1="40" y1="55" x2="460" y2="55"
+              stroke="var(--color-fg,#333)" stroke-width="1.5"/>
+        <!-- tick t -->
+        <line x1="100" y1="47" x2="100" y2="63"
+              stroke="var(--color-fg,#333)" stroke-width="2"/>
+        <text x="100" y="82" text-anchor="middle" font-size="13"
+              fill="var(--color-fg,#333)" font-style="italic">t</text>
+        <!-- tick t+h -->
+        <line x1="360" y1="47" x2="360" y2="63"
+              stroke="var(--color-fg,#333)" stroke-width="2"/>
+        <text x="360" y="82" text-anchor="middle" font-size="13"
+              fill="var(--color-fg,#333)" font-style="italic">t + h</text>
+        <!-- step arrow -->
+        <defs>
+          <marker id="sarrow" markerWidth="8" markerHeight="6"
+                  refX="8" refY="3" orient="auto">
+            <polygon points="0 0,8 3,0 6" fill="var(--msd-accent,#624298)"/>
+          </marker>
+        </defs>
+        <line x1="110" y1="55" x2="348" y2="55"
+              stroke="var(--msd-accent,#624298)" stroke-width="2.5"
+              marker-end="url(#sarrow)"/>
+        <text x="230" y="43" text-anchor="middle" font-size="11"
+              fill="var(--msd-accent,#624298)">one step of size h</text>
+        <!-- known dot -->
+        <circle cx="100" cy="55" r="6" fill="var(--msd-accent,#624298)"/>
+        <text x="100" y="22" text-anchor="middle" font-size="10"
+              fill="var(--color-muted,#666)">known:</text>
+        <text x="100" y="34" text-anchor="middle" font-size="10"
+              fill="var(--color-muted,#666)">y, y′</text>
+        <!-- predicted dot -->
+        <circle cx="360" cy="55" r="6" fill="var(--msd-accent2,#2a7ae2)"/>
+        <text x="360" y="22" text-anchor="middle" font-size="10"
+              fill="var(--color-muted,#666)">predicted:</text>
+        <text x="360" y="34" text-anchor="middle" font-size="10"
+              fill="var(--color-muted,#666)">y, y′</text>
+        <!-- arrow right end -->
+        <line x1="460" y1="49" x2="468" y2="55"
+              stroke="var(--color-fg,#333)" stroke-width="1.5"/>
+        <line x1="460" y1="61" x2="468" y2="55"
+              stroke="var(--color-fg,#333)" stroke-width="1.5"/>
+        <text x="478" y="59" font-size="13" fill="var(--color-muted,#666)"
+              font-style="italic">t</text>
+      </svg>
+      <figcaption>
+        Starting from a known state at time t, the solver estimates the state
+        at t + h, then repeats.
+      </figcaption>
+    </figure>
+
+    <h3>The simplest version: Euler's method</h3>
+    <p>
+      The most basic version — Euler's method, which you have already seen in
+      this course — takes a single slope sample at the start of each step:
+    </p>
+    <div class="lab-system">
+      <div class="lab-eq">y(t + h) &approx; y(t) + h &middot; y&prime;(t)</div>
+      <div class="lab-eq">y&prime;(t + h) &approx; y&prime;(t) + h &middot; y&Prime;(t)</div>
+    </div>
+    <p>
+      This works, but the error can accumulate quickly. Using a smaller step
+      size h helps, but then you need many more steps to cover the same time
+      interval.
+    </p>
+
+    <h3>A better idea: sample the slope several times per step (RK4)</h3>
+    <p>
+      The <strong>4th-order Runge-Kutta method</strong> (RK4) — the algorithm
+      behind ode45 — takes four slope samples within each step and
+      combines them in a weighted average. This gives a much more accurate
+      estimate without shrinking h:
+    </p>
+
+    <figure class="lab-rk4-diagram" aria-label="RK4 four-sample diagram">
+      <svg viewBox="0 0 500 90" role="img"
+           aria-label="Four slope samples k1 through k4 within one step">
+        <!-- step bar -->
+        <rect x="60" y="38" width="380" height="14" rx="3"
+              fill="var(--color-surface,#f0f0f5)" stroke="var(--color-border,#ccc)"
+              stroke-width="1"/>
+        <!-- sample markers -->
+        <!-- k1 at t -->
+        <circle cx="60"  cy="45" r="5" fill="var(--msd-accent,#624298)"/>
+        <text x="60"  y="30" text-anchor="middle" font-size="11"
+              fill="var(--msd-accent,#624298)" font-style="italic">k₁</text>
+        <text x="60"  y="72" text-anchor="middle" font-size="9"
+              fill="var(--color-muted,#777)">t</text>
+        <!-- k2 at t+h/2 -->
+        <circle cx="250" cy="45" r="5" fill="var(--msd-accent,#624298)" opacity=".75"/>
+        <text x="250" y="30" text-anchor="middle" font-size="11"
+              fill="var(--msd-accent,#624298)" font-style="italic">k₂</text>
+        <text x="250" y="72" text-anchor="middle" font-size="9"
+              fill="var(--color-muted,#777)">t + h/2</text>
+        <!-- k3 at t+h/2 -->
+        <circle cx="285" cy="45" r="5" fill="var(--msd-accent,#624298)" opacity=".5"/>
+        <text x="285" y="30" text-anchor="middle" font-size="11"
+              fill="var(--msd-accent,#624298)" font-style="italic">k₃</text>
+        <!-- k4 at t+h -->
+        <circle cx="440" cy="45" r="5" fill="var(--msd-accent,#624298)" opacity=".35"/>
+        <text x="440" y="30" text-anchor="middle" font-size="11"
+              fill="var(--msd-accent,#624298)" font-style="italic">k₄</text>
+        <text x="440" y="72" text-anchor="middle" font-size="9"
+              fill="var(--color-muted,#777)">t + h</text>
+      </svg>
+      <figcaption>
+        RK4 evaluates the slope at four points and combines them:
+        <em>y(t+h) &approx; y(t) + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)</em>.
+        The midpoint slopes k₂ and k₃ are weighted more heavily.
+      </figcaption>
+    </figure>
+
+    <p>
+      ode45 extends this by also computing a 5th-order estimate and comparing
+      it with the 4th-order one. If they disagree by too much, it shrinks the
+      step and tries again; if they agree very closely, it grows the step to
+      save time. This <em>adaptive step size</em> is what makes ode45
+      both accurate and efficient without you having to choose h manually.
+    </p>
+
+    <div class="lab-compare-table" role="region" aria-label="Method comparison table">
+      <table>
+        <caption>Comparing the methods</caption>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Slope samples per step</th>
+            <th>Step size</th>
+            <th>Typical error per step</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Euler</td>
+            <td>1</td>
+            <td>fixed</td>
+            <td>O(h²)</td>
+          </tr>
+          <tr>
+            <td>RK4</td>
+            <td>4</td>
+            <td>fixed</td>
+            <td>O(h⁵)</td>
+          </tr>
+          <tr class="lab-highlight-row">
+            <td>ode45 (RK4+5)</td>
+            <td>6</td>
+            <td><strong>adaptive</strong></td>
+            <td>O(h⁵), controlled</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The interactive experiment below uses RK4 with a fixed step size —
+      straightforward to understand, and accurate enough for all the parameter
+      values on the sliders.
+    </p>
+  </section>
+
+  <!-- ─── Interactive experiment ───────────────────────────────────────────── -->
+  <section class="lab-section lab-experiment" aria-labelledby="exp-heading">
+    <h2 id="exp-heading">Experiment</h2>
+
+    <!-- Controls -->
+    <div class="lab-controls" role="group" aria-label="System parameters">
+      <div class="lab-control-group">
+        <fieldset class="lab-param-set">
+          <legend>Parameters</legend>
+          <label class="lab-param">
+            <span>m (mass)</span>
+            <input type="range" id="ctrl-m" min="0.5" max="4" step="0.1" value="1"
+                   aria-valuemin="0.5" aria-valuemax="4">
+            <output id="val-m" class="lab-param-val">1.0</output>
+          </label>
+          <label class="lab-param">
+            <span>c (damping)</span>
+            <input type="range" id="ctrl-c" min="0" max="10" step="0.1" value="1"
+                   aria-valuemin="0" aria-valuemax="10">
+            <output id="val-c" class="lab-param-val">1.0</output>
+          </label>
+          <label class="lab-param">
+            <span>k (stiffness)</span>
+            <input type="range" id="ctrl-k" min="0.1" max="6" step="0.1" value="0.5"
+                   aria-valuemin="0.1" aria-valuemax="6">
+            <output id="val-k" class="lab-param-val">0.5</output>
+          </label>
+        </fieldset>
+        <fieldset class="lab-param-set">
+          <legend>Initial Conditions</legend>
+          <label class="lab-param">
+            <span>y(0)</span>
+            <input type="range" id="ctrl-y0" min="-1" max="1" step="0.05" value="0.1"
+                   aria-valuemin="-1" aria-valuemax="1">
+            <output id="val-y0" class="lab-param-val">0.10</output>
+          </label>
+          <label class="lab-param">
+            <span>y&prime;(0)</span>
+            <input type="range" id="ctrl-yp0" min="-2" max="2" step="0.05" value="0"
+                   aria-valuemin="-2" aria-valuemax="2">
+            <output id="val-yp0" class="lab-param-val">0.00</output>
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="lab-presets" aria-label="Damping presets">
+        <span class="lab-presets-label">Presets:</span>
+        <button class="lab-preset" data-preset="undamped">Undamped</button>
+        <button class="lab-preset" data-preset="underdamped">Underdamped</button>
+        <button class="lab-preset" data-preset="critical">Critically damped</button>
+        <button class="lab-preset" data-preset="overdamped">Overdamped</button>
+        <button class="lab-preset" data-preset="matlab">MATLAB defaults</button>
+      </div>
+
+      <div class="lab-status" aria-live="polite">
+        <span id="damping-label" class="lab-damping-badge"></span>
+        <span id="omega-label" class="lab-param-info"></span>
+      </div>
+    </div>
+
+    <!-- Animation + Plots -->
+    <div class="lab-visuals">
+      <!-- Spring animation -->
+      <div class="lab-animation-wrap" aria-label="Spring-mass animation">
+        <svg id="spring-svg" viewBox="0 0 500 120" role="img"
+             aria-label="Animated mass moving on a spring">
+          <!-- Left wall -->
+          <rect x="0" y="10" width="12" height="100" fill="var(--color-muted,#888)"/>
+          <line x1="12" y1="12" x2="0" y2="28" stroke="var(--color-muted,#888)" stroke-width="1.5"/>
+          <line x1="12" y1="32" x2="0" y2="48" stroke="var(--color-muted,#888)" stroke-width="1.5"/>
+          <line x1="12" y1="52" x2="0" y2="68" stroke="var(--color-muted,#888)" stroke-width="1.5"/>
+          <line x1="12" y1="72" x2="0" y2="88" stroke="var(--color-muted,#888)" stroke-width="1.5"/>
+          <line x1="12" y1="92" x2="0" y2="108" stroke="var(--color-muted,#888)" stroke-width="1.5"/>
+          <!-- Equilibrium marker -->
+          <line x1="230" y1="100" x2="230" y2="115"
+                stroke="var(--color-muted,#aaa)" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="230" y="118" text-anchor="middle" font-size="9"
+                fill="var(--color-muted,#999)">eq</text>
+          <!-- Dynamic spring polyline -->
+          <polyline id="spring-line" fill="none"
+                    stroke="var(--color-accent,#624298)" stroke-width="2.5"/>
+          <!-- Dynamic mass block -->
+          <rect id="mass-rect" y="40" width="60" height="50" rx="5"
+                fill="var(--color-surface,#f4f4f8)"
+                stroke="var(--color-fg,#333)" stroke-width="2"/>
+          <text id="mass-label" y="70" text-anchor="middle" font-size="16"
+                font-weight="bold" fill="var(--color-fg,#222)">m</text>
+          <!-- Displacement indicator -->
+          <line id="disp-line" y1="120" y2="120"
+                stroke="var(--color-accent2,#2a7ae2)" stroke-width="1.5"
+                stroke-dasharray="4,3"/>
+        </svg>
+        <div class="lab-anim-controls">
+          <button id="btn-play" class="lab-btn" aria-pressed="false">▶ Play</button>
+          <button id="btn-reset" class="lab-btn lab-btn-secondary">↺ Reset</button>
+          <label class="lab-param lab-time-display">
+            t = <output id="time-display">0.00</output>
+          </label>
+        </div>
+      </div>
+
+      <!-- Plots -->
+      <div class="lab-plots" role="group" aria-label="Solution plots">
+        <figure class="lab-plot-fig">
+          <svg id="plot-y"  class="lab-plot-svg" aria-label="Displacement y(t) vs time"></svg>
+          <figcaption>y(t) — displacement</figcaption>
+        </figure>
+        <figure class="lab-plot-fig">
+          <svg id="plot-yp" class="lab-plot-svg" aria-label="Velocity y'(t) vs time"></svg>
+          <figcaption>y&prime;(t) — velocity</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- Equation display -->
+    <div class="lab-live-eq" aria-live="polite">
+      <strong>Current ODE:</strong>
+      <span id="eq-display"></span>
+    </div>
+  </section>
+
+  <!-- ─── Explanation ──────────────────────────────────────────────────────── -->
+  <section class="lab-section" aria-labelledby="explain-heading">
+    <h2 id="explain-heading">What You're Seeing</h2>
+    <dl class="lab-dlist">
+      <dt>Undamped (c = 0)</dt>
+      <dd>Pure sinusoidal oscillation. Energy is conserved. The angular frequency
+          is ω₀ = √(k/m).</dd>
+      <dt>Underdamped (c² &lt; 4mk)</dt>
+      <dd>Oscillates with an exponentially decaying envelope. The
+          characteristic roots are complex: r = −c/(2m) ± iω<sub>d</sub>
+          where ω<sub>d</sub> = √(k/m − c²/(4m²)).</dd>
+      <dt>Critically damped (c² = 4mk)</dt>
+      <dd>Returns to rest as fast as possible without oscillating. Repeated
+          real root r = −c/(2m).</dd>
+      <dt>Overdamped (c² &gt; 4mk)</dt>
+      <dd>Returns to rest slowly, no oscillations. Two distinct real
+          negative roots.</dd>
+    </dl>
+    <p>
+      The curve labelled <span class="lab-legend-y">y(t)</span> is the
+      displacement; <span class="lab-legend-yp">y&prime;(t)</span> is the velocity.
+      Both are computed by the RK4 numerical solver described in the
+      <em>How the Solver Works</em> section above.
+    </p>
+  </section>
+
+</article>
+
+<!-- ─── Styles (scoped to .lab-page) ───────────────────────────────────────── -->
+<style>
+/* Colour tokens — override in site.css if already defined */
+:root {
+  --msd-accent:  #624298;
+  --msd-accent2: #2a7ae2;
+  --msd-y-col:   #d44;
+  --msd-yp-col:  #2a7ae2;
+}
+
+.lab-page { max-width: 860px; margin: 0 auto; padding: 1rem 1.25rem 3rem; font-size: 1rem; }
+
+/* ---- Section ---- */
+.lab-section { margin-top: 2.5rem; }
+.lab-section h2 { font-size: 1.15rem; border-bottom: 1px solid var(--color-border, #ddd); padding-bottom: .3rem; }
+
+/* ---- Header ---- */
+.lab-header h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+.lab-subtitle { color: var(--color-muted, #555); margin-top: 0; }
+
+/* ---- Diagram ---- */
+.lab-diagram { margin: 1.5rem auto; max-width: 540px; }
+.lab-diagram svg { width: 100%; height: auto; }
+.lab-diagram figcaption { font-size: .85rem; color: var(--color-muted,#666); text-align: center; margin-top: .4rem; }
+
+/* ---- Equations ---- */
+.lab-eq {
+  margin: 1rem auto;
+  text-align: center;
+  font-style: italic;
+  font-size: 1.1rem;
+  font-family: "Georgia", serif;
+}
+.lab-system { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.lab-matrix { display: inline-flex; align-items: center; gap: .15rem; font-style: normal; }
+.lab-bracket { font-size: 2rem; font-weight: 100; line-height: 1; }
+.lab-col { display: flex; flex-direction: column; align-items: center; gap: .2rem;
+           margin: 0 .4rem; font-style: italic; font-size: .95rem; }
+
+/* ---- Code ---- */
+.lab-code {
+  background: var(--color-code-bg, #f6f6f6);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  padding: .9rem 1rem;
+  font-size: .88rem;
+  overflow-x: auto;
+}
+
+/* ---- Controls ---- */
+.lab-controls { background: var(--color-surface, #f9f9fb); border: 1px solid var(--color-border,#ddd);
+  border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.lab-control-group { display: flex; flex-wrap: wrap; gap: 1rem; }
+.lab-param-set { border: none; padding: 0; margin: 0; flex: 1; min-width: 200px; }
+.lab-param-set legend { font-weight: 600; font-size: .9rem; margin-bottom: .5rem; }
+.lab-param { display: grid; grid-template-columns: 7rem 1fr 3rem;
+  align-items: center; gap: .4rem; margin-bottom: .4rem; font-size: .9rem; }
+.lab-param input[type=range] { width: 100%; accent-color: var(--msd-accent); }
+.lab-param-val { text-align: right; font-variant-numeric: tabular-nums; font-size: .9rem; }
+
+.lab-presets { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.lab-presets-label { font-size: .85rem; color: var(--color-muted,#666); }
+.lab-preset { padding: .25rem .6rem; border-radius: 4px; border: 1px solid var(--msd-accent);
+  background: transparent; color: var(--msd-accent); font-size: .82rem; cursor: pointer;
+  transition: background .15s, color .15s; }
+.lab-preset:hover, .lab-preset:focus { background: var(--msd-accent); color: #fff; }
+
+.lab-status { margin-top: .6rem; display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
+.lab-damping-badge { padding: .15rem .55rem; border-radius: 999px; font-size: .8rem;
+  font-weight: 600; background: var(--msd-accent); color: #fff; }
+.lab-param-info { font-size: .85rem; color: var(--color-muted,#555); }
+
+/* ---- Visuals ---- */
+.lab-visuals { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.lab-animation-wrap { background: var(--color-surface, #fafafa);
+  border: 1px solid var(--color-border,#ddd); border-radius: 8px; padding: .75rem; }
+#spring-svg { width: 100%; height: auto; display: block; }
+.lab-anim-controls { display: flex; gap: .6rem; align-items: center; margin-top: .5rem; flex-wrap: wrap; }
+.lab-btn { padding: .3rem .8rem; border-radius: 5px; border: 1px solid var(--msd-accent);
+  background: var(--msd-accent); color: #fff; cursor: pointer; font-size: .9rem; }
+.lab-btn-secondary { background: transparent; color: var(--msd-accent); }
+.lab-btn:hover, .lab-btn:focus { opacity: .85; }
+.lab-time-display { font-size: .9rem; font-variant-numeric: tabular-nums; }
+
+.lab-plots { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.lab-plot-fig { margin: 0; }
+.lab-plot-svg { width: 100%; height: 200px; display: block;
+  background: var(--color-surface, #fafafa);
+  border: 1px solid var(--color-border,#ddd); border-radius: 6px; }
+.lab-plot-fig figcaption { font-size: .85rem; text-align: center; color: var(--color-muted,#666); margin-top: .25rem; }
+
+.lab-live-eq { margin-top: 1rem; font-size: .9rem;
+  background: var(--color-code-bg,#f6f6f6); border-radius: 6px;
+  padding: .5rem .9rem; }
+.lab-live-eq #eq-display { font-style: italic; font-family: Georgia, serif; }
+
+/* ---- Solver section ---- */
+.lab-section h3 { font-size: 1rem; margin: 1.4rem 0 .5rem; font-weight: 600; }
+
+.lab-callout {
+  background: var(--color-surface, #f4f4f8);
+  border-left: 4px solid var(--msd-accent, #624298);
+  border-radius: 0 6px 6px 0;
+  padding: .8rem 1rem;
+  margin: 1rem 0 1.4rem;
+}
+.lab-callout strong { display: block; margin-bottom: .35rem; font-size: .95rem; }
+.lab-callout p { margin: 0; font-size: .92rem; line-height: 1.6; }
+
+.lab-stepper    { margin: 1.2rem auto; max-width: 500px; }
+.lab-stepper svg, .lab-rk4-diagram svg { width: 100%; height: auto; }
+.lab-stepper figcaption, .lab-rk4-diagram figcaption {
+  font-size: .84rem; color: var(--color-muted,#666);
+  text-align: center; margin-top: .4rem;
+}
+.lab-rk4-diagram { margin: 1.2rem auto; max-width: 500px; }
+
+.lab-compare-table { overflow-x: auto; margin: 1.2rem 0; }
+.lab-compare-table table {
+  width: 100%; border-collapse: collapse; font-size: .9rem;
+}
+.lab-compare-table caption {
+  font-size: .85rem; color: var(--color-muted,#666);
+  text-align: left; margin-bottom: .4rem;
+}
+.lab-compare-table th, .lab-compare-table td {
+  padding: .45rem .7rem;
+  border: 1px solid var(--color-border,#ddd);
+  text-align: left;
+}
+.lab-compare-table th { background: var(--color-surface,#f4f4f8); font-weight: 600; }
+.lab-highlight-row td { background: color-mix(in srgb, var(--msd-accent,#624298) 8%, transparent); }
+
+/* ---- Explanation ---- */
+.lab-dlist dt { font-weight: 600; margin-top: .7rem; }
+.lab-dlist dd { margin-left: 1rem; }
+.lab-legend-y  { color: var(--msd-y-col);  font-weight: 600; }
+.lab-legend-yp { color: var(--msd-yp-col); font-weight: 600; }
+
+/* ---- Responsive ---- */
+@media (max-width: 540px) {
+  .lab-plots { grid-template-columns: 1fr; }
+  .lab-param { grid-template-columns: 5.5rem 1fr 2.5rem; }
+}
+</style>
+
+<!-- ─── Script (embedded model is injected here by build.py) ─────────────── -->
+<script>
+(function (root) {
+"use strict";
+// mass-spring-damper-model.cjs
+// Numerical model for the second-order mass-spring-damper ODE:
+//   m y'' + c y' + k y = 0
+//
+// Reduced to a first-order system (as in MATLAB's ode45 workflow):
+//   Let y1 = y,  y2 = y'
+//   y1' = y2
+//   y2' = (-c*y2 - k*y1) / m
+
+// ----- ODE right-hand side -----
+function ode(t, y, m, c, k) {
+  // y = [displacement, velocity]
+  return [
+    y[1],
+    (-c * y[1] - k * y[0]) / m
+  ];
+}
+
+// ----- Single RK4 step -----
+function rk4Step(t, y, h, m, c, k) {
+  const f = (tt, yy) => ode(tt, yy, m, c, k);
+  const add = (a, b, s) => [a[0] + s * b[0], a[1] + s * b[1]];
+
+  const k1 = f(t,         y);
+  const k2 = f(t + h / 2, add(y, k1, h / 2));
+  const k3 = f(t + h / 2, add(y, k2, h / 2));
+  const k4 = f(t + h,     add(y, k3, h));
+
+  return [
+    y[0] + (h / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+    y[1] + (h / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])
+  ];
+}
+
+// ----- Full solver -----
+// Returns arrays t, y (displacement), yp (velocity)
+function solve({ m, c, k, y0, yp0, tEnd = 50, steps = 1000 }) {
+  if (m <= 0) throw new Error("m must be positive");
+  if (k <= 0) throw new Error("k must be positive");
+  if (c < 0)  throw new Error("c must be non-negative");
+
+  const h = tEnd / steps;
+  const t  = new Array(steps + 1);
+  const y  = new Array(steps + 1);
+  const yp = new Array(steps + 1);
+
+  let state = [y0, yp0];
+  for (let i = 0; i <= steps; i++) {
+    const ti = i * h;
+    t[i]  = ti;
+    y[i]  = state[0];
+    yp[i] = state[1];
+    if (i < steps) {
+      state = rk4Step(ti, state, h, m, c, k);
+    }
+  }
+  return { t, y, yp };
+}
+
+// ----- Damping classification -----
+// Returns one of: 'undamped' | 'underdamped' | 'critical' | 'overdamped'
+function classify(m, c, k) {
+  if (c === 0) return "undamped";
+  const disc = c * c - 4 * m * k;
+  if (Math.abs(disc) < 1e-9) return "critical";
+  return disc > 0 ? "overdamped" : "underdamped";
+}
+
+// ----- Exact analytic solution (for comparison / tests) -----
+// Returns y(t) evaluated at array of times; null if no closed form is handy.
+function exactSolution(m, c, k, y0, yp0, tArr) {
+  const type = classify(m, c, k);
+  const omega0 = Math.sqrt(k / m);
+
+  if (type === "undamped") {
+    // y = A cos(omega0 t) + B sin(omega0 t)
+    const A = y0;
+    const B = yp0 / omega0;
+    return tArr.map(t => A * Math.cos(omega0 * t) + B * Math.sin(omega0 * t));
+  }
+
+  const alpha = c / (2 * m);
+
+  if (type === "underdamped") {
+    const omegaD = Math.sqrt(omega0 * omega0 - alpha * alpha);
+    // y = e^(-alpha t) [A cos(omegaD t) + B sin(omegaD t)]
+    const A = y0;
+    const B = (yp0 + alpha * y0) / omegaD;
+    return tArr.map(t =>
+      Math.exp(-alpha * t) * (A * Math.cos(omegaD * t) + B * Math.sin(omegaD * t))
+    );
+  }
+
+  if (type === "critical") {
+    // y = e^(-alpha t) (A + B t)
+    const A = y0;
+    const B = yp0 + alpha * y0;
+    return tArr.map(t => Math.exp(-alpha * t) * (A + B * t));
+  }
+
+  // overdamped
+  const beta = Math.sqrt(alpha * alpha - omega0 * omega0);
+  const r1 = -alpha + beta;
+  const r2 = -alpha - beta;
+  // y = A e^(r1 t) + B e^(r2 t)
+  // y(0) = A + B = y0
+  // y'(0) = A r1 + B r2 = yp0
+  const A = (yp0 - r2 * y0) / (r1 - r2);
+  const B = y0 - A;
+  return tArr.map(t => A * Math.exp(r1 * t) + B * Math.exp(r2 * t));
+}
+
+const api = Object.freeze({ solve, classify, exactSolution, ode, rk4Step });
+if (typeof module === "object" && module.exports) module.exports = api;
+else root.Amath351MassSpring = api;
+})(globalThis);
+
+
+(function () {
+  "use strict";
+
+  const { solve, classify } = globalThis.Amath351MassSpring;
+
+  // ── UI state ──────────────────────────────────────────────────────────
+  const presets = {
+    undamped:    { m: 1, c: 0,   k: 4,   y0:  1,   yp0: 0 },
+    underdamped: { m: 1, c: 1,   k: 0.5, y0:  0.1, yp0: 0 },
+    critical:    { m: 1, c: 4,   k: 4,   y0:  1,   yp0: 0 },
+    overdamped:  { m: 1, c: 10,  k: 4,   y0:  1,   yp0: 0 },
+    matlab:      { m: 1, c: 1,   k: 0.5, y0:  0.1, yp0: 0 },
+  };
+
+  const labelNames = {
+    undamped:    "Undamped",
+    underdamped: "Underdamped",
+    critical:    "Critically damped",
+    overdamped:  "Overdamped",
+  };
+
+  let solution = null;
+  let animFrame = null;
+  let animIdx   = 0;
+  let playing   = false;
+
+  // ── DOM refs ──────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const ctrlM   = $("ctrl-m"),   valM   = $("val-m");
+  const ctrlC   = $("ctrl-c"),   valC   = $("val-c");
+  const ctrlK   = $("ctrl-k"),   valK   = $("val-k");
+  const ctrlY0  = $("ctrl-y0"),  valY0  = $("val-y0");
+  const ctrlYp0 = $("ctrl-yp0"), valYp0 = $("val-yp0");
+  const dampingBadge = $("damping-label");
+  const omegaLabel   = $("omega-label");
+  const eqDisplay    = $("eq-display");
+  const btnPlay      = $("btn-play");
+  const btnReset     = $("btn-reset");
+  const timeDisplay  = $("time-display");
+  const springLine   = $("spring-line");
+  const massRect     = $("mass-rect");
+  const massLabel    = $("mass-label");
+  const dispLine     = $("disp-line");
+
+  // ── SVG plot helpers ──────────────────────────────────────────────────
+  function makePlot(svgId, getY, color, label) {
+    const svg = $(svgId);
+    const W = 400, H = 200, PAD = { l: 42, r: 10, t: 12, b: 30 };
+    const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
+
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.innerHTML = "";
+
+    function ns(tag, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    if (!solution) return;
+    const { t, y, yp } = solution;
+    const vals = getY === "y" ? y : yp;
+
+    const tMax  = t[t.length - 1];
+    const vMin  = Math.min(...vals);
+    const vMax  = Math.max(...vals);
+    const vPad  = Math.max(0.05, (vMax - vMin) * 0.08);
+    const lo    = vMin - vPad, hi = vMax + vPad;
+    const sx    = v => PAD.l + (v / tMax) * iW;
+    const sy    = v => PAD.t + iH - ((v - lo) / (hi - lo)) * iH;
+
+    // Grid + zero line
+    const zeroY = sy(0);
+    svg.appendChild(ns("line", { x1: PAD.l, y1: zeroY, x2: PAD.l + iW, y2: zeroY,
+      stroke: "var(--color-border,#ddd)", "stroke-width": 1 }));
+
+    // Axes
+    svg.appendChild(ns("line", { x1: PAD.l, y1: PAD.t, x2: PAD.l, y2: PAD.t + iH,
+      stroke: "var(--color-fg,#333)", "stroke-width": 1 }));
+    svg.appendChild(ns("line", { x1: PAD.l, y1: PAD.t + iH, x2: PAD.l + iW, y2: PAD.t + iH,
+      stroke: "var(--color-fg,#333)", "stroke-width": 1 }));
+
+    // Y axis ticks
+    for (const v of [lo, (lo + hi) / 2, hi]) {
+      const y2 = sy(v);
+      svg.appendChild(ns("line", { x1: PAD.l - 4, y1: y2, x2: PAD.l, y2,
+        stroke: "var(--color-fg,#333)", "stroke-width": 1 }));
+      const lbl = ns("text", { x: PAD.l - 6, y: y2 + 4, "text-anchor": "end",
+        "font-size": 9, fill: "var(--color-muted,#777)" });
+      lbl.textContent = v.toFixed(2);
+      svg.appendChild(lbl);
+    }
+
+    // X axis ticks
+    for (let v = 0; v <= tMax; v += 10) {
+      const x2 = sx(v);
+      svg.appendChild(ns("line", { x1: x2, y1: PAD.t + iH, x2, y2: PAD.t + iH + 4,
+        stroke: "var(--color-fg,#333)", "stroke-width": 1 }));
+      const lbl = ns("text", { x: x2, y: PAD.t + iH + 14, "text-anchor": "middle",
+        "font-size": 9, fill: "var(--color-muted,#777)" });
+      lbl.textContent = v;
+      svg.appendChild(lbl);
+    }
+
+    // Axis labels
+    const xLbl = ns("text", { x: PAD.l + iW / 2, y: H - 2, "text-anchor": "middle",
+      "font-size": 10, fill: "var(--color-muted,#777)" });
+    xLbl.textContent = "t";
+    svg.appendChild(xLbl);
+
+    // Curve
+    let d = "";
+    for (let i = 0; i < t.length; i++) {
+      const px = sx(t[i]), py = sy(vals[i]);
+      d += (i === 0 ? `M${px},${py}` : ` L${px},${py}`);
+    }
+    svg.appendChild(ns("path", { d, fill: "none", stroke: color, "stroke-width": 2 }));
+
+    // Scrubber dot
+    const dot = ns("circle", { cx: PAD.l, cy: sy(vals[0]), r: 4,
+      fill: color, id: svgId + "-dot" });
+    svg.appendChild(dot);
+
+    // Store scale functions for animation
+    svg._sx = sx; svg._sy = sy; svg._vals = vals;
+  }
+
+  function updateDot(svgId, idx) {
+    const svg = $(svgId);
+    if (!svg || !svg._sx) return;
+    const dot = $(svgId + "-dot");
+    if (!dot || !solution) return;
+    dot.setAttribute("cx", svg._sx(solution.t[idx]));
+    dot.setAttribute("cy", svg._sy(svg._vals[idx]));
+  }
+
+  // ── Spring shape ─────────────────────────────────────────────────────
+  const EQ_X = 230;        // equilibrium x-position of mass centre in SVG coords
+  const MAX_PIXELS = 155;  // max pixels the mass can move left or right of EQ_X
+
+  function getScale() {
+    if (!solution) return 180;
+    const maxDisp = Math.max(...solution.y.map(Math.abs));
+    return maxDisp > 0 ? MAX_PIXELS / maxDisp : 180;
+  }
+
+  function springPoints(massX) {
+    // coil spring from x=12 to massX
+    const x0 = 12, x1 = massX;
+    const nCoils = 8, cy = 60;
+    const pts = [[x0, cy]];
+    for (let i = 0; i <= nCoils; i++) {
+      const x = x0 + (i + 0.5) * (x1 - x0) / (nCoils + 1);
+      const dy = (i % 2 === 0) ? -15 : 15;
+      pts.push([x, cy + dy]);
+    }
+    pts.push([x1, cy]);
+    return pts.map(p => p.join(",")).join(" ");
+  }
+
+  function updateAnimation(disp) {
+    const clampedX = EQ_X + getScale() * disp;
+    // mass block: centred at clampedX
+    const rectX = clampedX - 30;
+    massRect.setAttribute("x", rectX);
+    massLabel.setAttribute("x", clampedX);
+    springLine.setAttribute("points", springPoints(clampedX - 30));
+    // displacement line
+    dispLine.setAttribute("x1", EQ_X);
+    dispLine.setAttribute("x2", clampedX);
+  }
+
+  // ── Recompute and redraw ──────────────────────────────────────────────
+  function refresh() {
+    const m = +ctrlM.value, c = +ctrlC.value,
+          k = +ctrlK.value, y0 = +ctrlY0.value, yp0 = +ctrlYp0.value;
+
+    valM.value   = m.toFixed(1);
+    valC.value   = c.toFixed(1);
+    valK.value   = k.toFixed(1);
+    valY0.value  = y0.toFixed(2);
+    valYp0.value = yp0.toFixed(2);
+
+    solution = solve({ m, c, k, y0, yp0 });
+
+    const type   = classify(m, c, k);
+    const omega0 = Math.sqrt(k / m);
+    dampingBadge.textContent = labelNames[type] || type;
+    omegaLabel.textContent   = `ω₀ = ${omega0.toFixed(3)} rad/s`;
+    eqDisplay.textContent    =
+      `${m}y″ + ${c}y′ + ${k}y = 0,  y(0) = ${y0},  y′(0) = ${yp0}`;
+
+    makePlot("plot-y",  "y",  "var(--msd-y-col,#d44)",     "y(t)");
+    makePlot("plot-yp", "yp", "var(--msd-yp-col,#2a7ae2)", "y′(t)");
+
+    animIdx = 0;
+    timeDisplay.textContent = "0.00";
+    updateAnimation(solution.y[0]);
+    updateDot("plot-y", 0);
+    updateDot("plot-yp", 0);
+  }
+
+  // ── Animation loop ────────────────────────────────────────────────────
+  function step() {
+    if (!playing || !solution) return;
+    animIdx = (animIdx + 2) % solution.t.length;
+    timeDisplay.textContent = solution.t[animIdx].toFixed(2);
+    updateAnimation(solution.y[animIdx]);
+    updateDot("plot-y", animIdx);
+    updateDot("plot-yp", animIdx);
+    if (animIdx < solution.t.length - 2) {
+      animFrame = requestAnimationFrame(step);
+    } else {
+      playing = false;
+      btnPlay.textContent   = "▶ Play";
+      btnPlay.setAttribute("aria-pressed", "false");
+    }
+  }
+
+  btnPlay.addEventListener("click", () => {
+    if (!solution) return;
+    playing = !playing;
+    if (playing && animIdx >= solution.t.length - 2) animIdx = 0;
+    btnPlay.textContent = playing ? "⏸ Pause" : "▶ Play";
+    btnPlay.setAttribute("aria-pressed", playing ? "true" : "false");
+    if (playing) animFrame = requestAnimationFrame(step);
+    else cancelAnimationFrame(animFrame);
+  });
+
+  btnReset.addEventListener("click", () => {
+    playing = false;
+    cancelAnimationFrame(animFrame);
+    btnPlay.textContent = "▶ Play";
+    btnPlay.setAttribute("aria-pressed", "false");
+    animIdx = 0;
+    if (solution) {
+      timeDisplay.textContent = "0.00";
+      updateAnimation(solution.y[0]);
+      updateDot("plot-y", 0);
+      updateDot("plot-yp", 0);
+    }
+  });
+
+  // ── Sliders ───────────────────────────────────────────────────────────
+  [ctrlM, ctrlC, ctrlK, ctrlY0, ctrlYp0].forEach(el => {
+    el.addEventListener("input", () => {
+      playing = false;
+      cancelAnimationFrame(animFrame);
+      btnPlay.textContent = "▶ Play";
+      btnPlay.setAttribute("aria-pressed", "false");
+      refresh();
+    });
+  });
+
+  // ── Presets ───────────────────────────────────────────────────────────
+  document.querySelectorAll(".lab-preset").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const p = presets[btn.dataset.preset];
+      if (!p) return;
+      ctrlM.value   = p.m;
+      ctrlC.value   = p.c;
+      ctrlK.value   = p.k;
+      ctrlY0.value  = p.y0;
+      ctrlYp0.value = p.yp0;
+      playing = false;
+      cancelAnimationFrame(animFrame);
+      btnPlay.textContent = "▶ Play";
+      btnPlay.setAttribute("aria-pressed", "false");
+      refresh();
+    });
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  refresh();
+
+})();
+</script>
+</main>
+<nav class="site-example-nav" aria-label="Student project navigation"><a href="../solow-growth/"><small>Previous student project</small>← Solow growth model</a><a class="site-all-examples" href="../../#student-labs">All student projects</a><span></span></nav>
+    <footer class="site-footer"><span>University of Washington · Autumn 2026</span><div><a href="https://shzhang3.github.io/#teaching">Shiheng Zhang · Teaching</a><a href="https://github.com/shzhang3/amath351-lab" target="_blank" rel="noopener">Contribute on GitHub ↗</a></div></footer>
+  </div>
+
+</body>
+</html>
